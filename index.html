@@ -154,7 +154,7 @@
 
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
-        <span class="proximo-turno-num" id="lblSiguienteTurno">A1</span>
+        <span class="proximo-turno-num" id="lblSiguienteTurno">A27</span>
     </div>
 
     <form id="registroForm">
@@ -196,26 +196,27 @@
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
 
-// Verificamos el día actual para reiniciar el contador automáticamente si cambió de fecha
+// Inicializamos directamente en 27 para que el siguiente en emitirse sea el A27
+let contadorTurnoLocal = 27;
+
+// Si ya se guardó un avance previo en este navegador hoy, lo respetamos; de lo contrario arranca en 27
 let fechaHoy = new Date().toDateString();
 let fechaGuardada = localStorage.getItem("turno_fecha_actual") || "";
 
-let contadorTurnoLocal = 1;
 if (fechaGuardada === fechaHoy) {
-    let ultimoGuardado = parseInt(localStorage.getItem("ultimo_turno_numero") || "0", 10);
-    if (!isNaN(ultimoGuardado)) {
+    let ultimoGuardado = parseInt(localStorage.getItem("ultimo_turno_numero") || "26", 10);
+    if (!isNaN(ultimoGuardado) && ultimoGuardado >= 26) {
         contadorTurnoLocal = ultimoGuardado + 1;
     }
 } else {
     localStorage.setItem("turno_fecha_actual", fechaHoy);
-    localStorage.setItem("ultimo_turno_numero", "0");
+    localStorage.setItem("ultimo_turno_numero", "26");
 }
 
 function actualizarSiguienteVisual() {
     document.getElementById('lblSiguienteTurno').innerText = "A" + contadorTurnoLocal;
 }
 
-// Inicialización instantánea
 actualizarSiguienteVisual();
 
 document.getElementById('registroForm').addEventListener('submit', async function(e) {
@@ -249,14 +250,12 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     btn.disabled = true;
 
     try {
-        // Envío asíncrono limpio a Google Sheets sin congelar la interfaz
         fetch(URL_WEB_APP, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
 
-        // Actualizamos memoria local de inmediato
         localStorage.setItem("ultimo_turno_numero", contadorTurnoLocal.toString());
         contadorTurnoLocal++;
 
