@@ -94,7 +94,10 @@
 
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
-let ultimoTimestampProcesado = 0;
+
+// Corrección aplicada: Inicia con el tiempo actual para ignorar llamadas previas al cargar la página[cite: 4]
+let ultimoTimestampProcesado = Date.now();
+
 let colaTurnosVoz = [];
 let reproduciendoVozActiva = false;
 
@@ -109,14 +112,19 @@ function iniciarSistemaPantalla() {
     document.getElementById('audioOverlay').style.display = 'none';
     let dummyUtterance = new SpeechSynthesisUtterance("");
     window.speechSynthesis.speak(dummyUtterance);
+    
+    // Refrescamos el timestamp al momento exacto de inicio del sistema
+    ultimoTimestampProcesado = Date.now();
+    
     iniciarReproductorVideos();
-    setInterval(sincronizarPantalla, 1000);
+    setInterval(sincronizarPantalla, 1000);[cite: 4]
 }
 
 function iniciarReproductorVideos() {
     let elementoVideo = document.getElementById('videoPlaylist');
     if (!elementoVideo) return;
     
+    // Volumen estandarizado base del video en 30%[cite: 4]
     elementoVideo.volume = 0.30; 
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
@@ -169,6 +177,7 @@ function procesarColaVoz() {
 
     let elementoVideo = document.getElementById('videoPlaylist');
     if (elementoVideo) {
+        // Bajamos el volumen del video al 5% para que la voz sintetizada resalte perfectamente[cite: 4]
         elementoVideo.volume = 0.05; 
     }
 
@@ -190,6 +199,7 @@ function procesarColaVoz() {
 
     utterance.onend = () => {
         if (elementoVideo) {
+            // Restauramos el volumen estandarizado del video[cite: 4]
             elementoVideo.volume = 0.30; 
         }
         reproduciendoVozActiva = false;
@@ -238,6 +248,7 @@ async function sincronizarPantalla() {
             llamados.sort((a, b) => b.UltimoLlamado - a.UltimoLlamado);
             let actual = llamados[0];
 
+            // Solo procesa llamadas cuyo timestamp sea estrictamente posterior al inicio de la pantalla[cite: 4]
             if (actual.UltimoLlamado > ultimoTimestampProcesado) {
                 ultimoTimestampProcesado = actual.UltimoLlamado;
                 document.getElementById('lblNumero').innerText = actual.ID;
