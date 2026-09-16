@@ -4,32 +4,200 @@
     <meta charset="UTF-8">
     <title>Recepción - Ingreso de Clientes</title>
     <style>
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; gap: 20px; }
-        .form-container { background: #ffffff; padding: 30px; border-radius: 20px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
-        .sidebar-container { background: #ffffff; padding: 20px; border-radius: 20px; width: 340px; height: 620px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); display: flex; flex-direction: column; box-sizing: border-box; }
-        .sidebar-title { font-size: 15px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
-        .sidebar-list { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
-        .sidebar-card { background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; }
-        .sidebar-card-header { display: flex; justify-content: space-between; align-items: center; }
-        .s-id { font-size: 18px; font-weight: 900; color: #0284c7; }
-        .s-nombre { font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
-        .s-detalles-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
-        .s-detalles { font-size: 11px; color: #64748b; }
-        .btn-ver-mini { background: #0284c7; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; }
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+        .form-container { 
+            background: #ffffff; 
+            padding: 30px; 
+            border-radius: 20px; 
+            width: 100%;
+            max-width: 600px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
+        }
+        
+        /* Barra lateral vertical de control rápido */
+        .sidebar-container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 20px;
+            width: 340px;
+            height: 620px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        .sidebar-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        .sidebar-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 4px;
+        }
+        .sidebar-card {
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: relative;
+        }
+        .sidebar-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .s-id {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0284c7;
+        }
+        .s-nombre {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 210px;
+        }
+        .s-detalles-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .s-detalles {
+            font-size: 11px;
+            color: #64748b;
+        }
+        .btn-ver-mini {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
         .btn-ver-mini:hover { background: #0369a1; }
-        .proximo-turno-box { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .proximo-turno-label { font-size: 13px; font-weight: 700; color: #166534; text-transform: uppercase; }
-        .proximo-turno-num { font-size: 22px; font-weight: 900; color: #15803d; }
-        .logo-container { text-align: center; margin-bottom: 15px; }
-        .logo-container img { max-height: 55px; object-fit: contain; }
-        h2 { text-align: center; color: #0f172a; margin-top: 0; font-weight: 800; font-size: 20px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .full-width { grid-column: span 2; }
-        label { font-weight: 700; color: #334155; display: block; margin-top: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-        input, select, textarea { width: 100%; padding: 9px; margin-top: 3px; border: 1.5px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 13px; background: #f8fafc; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #0284c7; background: #fff; }
-        button { background: #0284c7; color: white; padding: 12px; border: none; width: 100%; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2); }
+
+        /* Indicador del próximo turno en el formulario */
+        .proximo-turno-box {
+            background: #f0fdf4;
+            border: 1.5px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .proximo-turno-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #166534;
+            text-transform: uppercase;
+        }
+        .proximo-turno-num {
+            font-size: 22px;
+            font-weight: 900;
+            color: #15803d;
+        }
+
+        .logo-container { 
+            text-align: center; 
+            margin-bottom: 15px; 
+        }
+        .logo-container img { 
+            max-height: 55px; 
+            object-fit: contain;
+        }
+        h2 { 
+            text-align: center; 
+            color: #0f172a; 
+            margin-top: 0; 
+            font-weight: 800;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+        label { 
+            font-weight: 700; 
+            color: #334155; 
+            display: block; 
+            margin-top: 6px; 
+            font-size: 11px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 9px; 
+            margin-top: 3px; 
+            border: 1.5px solid #cbd5e1; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 13px; 
+            background: #f8fafc;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0284c7;
+            background: #fff;
+        }
+        button { 
+            background: #0284c7; 
+            color: white; 
+            padding: 12px; 
+            border: none; 
+            width: 100%; 
+            border-radius: 10px; 
+            font-size: 15px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 15px;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+        }
         button:hover { background: #0369a1; }
+        button:active { transform: scale(0.98); }
+
+        /* Estilos para el Modal de Detalles */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 30px; border-radius: 12px; width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
         .modal-content h3 { margin-top: 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
@@ -39,28 +207,62 @@
 </head>
 <body>
 
+<!-- Formulario Principal -->
 <div class="form-container">
-    <div class="logo-container"><img src="img/logo.png" alt="Logo Empresa"></div>
+    <div class="logo-container">
+        <img src="img/logo.png" alt="Logo Empresa">
+    </div>
     <h2>Registro de Nuevo Cliente</h2>
+
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
         <span class="proximo-turno-num" id="lblSiguienteTurno">Cargando...</span>
     </div>
+
     <form id="registroForm">
         <div class="form-grid">
-            <div><label>Nombres:</label><input type="text" id="nombres" required autocomplete="off" autofocus></div>
-            <div><label>Apellidos:</label><input type="text" id="apellidos" required autocomplete="off"></div>
-            <div><label>Género:</label><select id="genero"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
-            <div><label>Fecha de Nacimiento:</label><input type="date" id="fechaNacimiento"></div>
-            <div><label>Nombre del Padre:</label><input type="text" id="padre"></div>
-            <div><label>Nombre de la Madre:</label><input type="text" id="madre"></div>
-            <div class="full-width"><label>Lugar de Nacimiento:</label><input type="text" id="lugarNacimiento"></div>
-            <div class="full-width"><label>Comentarios:</label><textarea id="comentarios" rows="2"></textarea></div>
+            <div>
+                <label>Nombres:</label>
+                <input type="text" id="nombres" required autocomplete="off" autofocus>
+            </div>
+            <div>
+                <label>Apellidos:</label>
+                <input type="text" id="apellidos" required autocomplete="off">
+            </div>
+            <div>
+                <label>Género:</label>
+                <select id="genero">
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                </select>
+            </div>
+            <div>
+                <label>Fecha de Nacimiento:</label>
+                <input type="date" id="fechaNacimiento">
+            </div>
+            <div>
+                <label>Nombre del Padre:</label>
+                <input type="text" id="padre">
+            </div>
+            <div>
+                <label>Nombre de la Madre:</label>
+                <input type="text" id="madre">
+            </div>
+            <div class="full-width">
+                <label>Lugar de Nacimiento:</label>
+                <input type="text" id="lugarNacimiento">
+            </div>
+            <div class="full-width">
+                <label>Comentarios:</label>
+                <textarea id="comentarios" rows="2"></textarea>
+            </div>
         </div>
+        
         <button type="submit" id="btnSubmit">Guardar e Imprimir Turno</button>
     </form>
 </div>
 
+<!-- Barra Lateral Vertical con el Historial Detallado -->
 <div class="sidebar-container">
     <div class="sidebar-title">Historial de Ingresos Hoy</div>
     <div class="sidebar-list" id="sidebarLista">
@@ -68,6 +270,7 @@
     </div>
 </div>
 
+<!-- Ventana Modal para Ver Detalles Completos -->
 <div class="modal-overlay" id="modalDetalles" onclick="cerrarModalAfuera(event)">
     <div class="modal-content">
         <button class="close-modal" onclick="cerrarModal()">X</button>
@@ -90,32 +293,26 @@ async function obtenerUltimoTurno() {
     try {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
         let datos = await res.json();
-        let hoyStr = new Date().toDateString();
         if (datos && datos.length > 0) {
             let maxNum = 0;
             datos.forEach(row => {
-                if (row.ID && row.FechaHora) {
-                    let fechaFila = new Date(row.FechaHora).toDateString();
-                    if (fechaFila === hoyStr) {
-                        let match = row.ID.match(/\d+/);
-                        if (match) {
-                            let n = parseInt(match[0], 10);
-                            if (n > maxNum) maxNum = n;
-                        }
-                    }
+                let match = row.ID.match(/\d+/);
+                if (match) {
+                    let n = parseInt(match[0], 10);
+                    if (n > maxNum) maxNum = n;
                 }
             });
             ultimoNumeroRegistrado = maxNum;
         }
         actualizarSiguienteVisual();
     } catch (e) {
-        document.getElementById('lblSiguienteTurno').innerText = "A1";
+        document.getElementById('lblSiguienteTurno').innerText = "A001";
     }
 }
 
 function actualizarSiguienteVisual() {
     let siguiente = ultimoNumeroRegistrado + 1;
-    let formateado = "A" + siguiente; // Conteo limpio A1, A2, etc. (sin ceros)
+    let formateado = "A" + String(siguiente).padStart(3, '0');
     document.getElementById('lblSiguienteTurno').innerText = formateado;
 }
 
@@ -135,9 +332,14 @@ document.getElementById('registroForm').addEventListener('submit', async functio
 
     let datos = {
         accion: "nuevo_registro",
-        nombres: nombres, apellidos: apellidos, genero: genero,
-        fechaNacimiento: fechaNacimiento, padre: padre, madre: madre,
-        lugarNacimiento: lugarNacimiento, comentarios: comentarios
+        nombres: nombres,
+        apellidos: apellidos,
+        genero: genero,
+        fechaNacimiento: fechaNacimiento,
+        padre: padre,
+        madre: madre,
+        lugarNacimiento: lugarNacimiento,
+        comentarios: comentarios
     };
 
     let btn = document.getElementById('btnSubmit');
@@ -158,24 +360,32 @@ document.getElementById('registroForm').addEventListener('submit', async functio
 
         document.getElementById('registroForm').reset();
         
+        // Objeto con todos los datos para pasarlos al botón "Ver"
         let clienteObj = {
-            ID: result.id, Nombres: nombres, Apellidos: apellidos,
-            Genero: genero, FechaNacimiento: fechaNacimiento,
-            Padre: padre, Madre: madre, LugarNacimiento: lugarNacimiento, Comentarios: comentarios
+            ID: result.id,
+            Nombres: nombres,
+            Apellidos: apellidos,
+            Genero: genero,
+            FechaNacimiento: fechaNacimiento,
+            Padre: padre,
+            Madre: madre,
+            LugarNacimiento: lugarNacimiento,
+            Comentarios: comentarios
         };
 
         agregarAHistorialLateral(clienteObj);
+
         actualizarSiguienteVisual();
 
         btn.style.backgroundColor = "#16a34a";
-        btn.innerText = `¡Guardado: ${result.id}!`;
+        btn.innerText = `¡Guardado con éxito: ${result.id}!`;
         
         setTimeout(() => {
             btn.style.backgroundColor = "#0284c7";
             btn.innerText = "Guardar e Imprimir Turno";
             btn.disabled = false;
             document.getElementById('nombres').focus();
-        }, 1200);
+        }, 1500);
 
     } catch (error) {
         alert("Error al conectar con la base de datos.");
@@ -187,9 +397,14 @@ document.getElementById('registroForm').addEventListener('submit', async functio
 
 function agregarAHistorialLateral(cliente) {
     let lista = document.getElementById('sidebarLista');
-    if (lista.innerHTML.includes("No hay registros")) lista.innerHTML = "";
+    
+    if (lista.innerHTML.includes("No hay registros")) {
+        lista.innerHTML = "";
+    }
 
     let nombreCompleto = cliente.Nombres + " " + cliente.Apellidos;
+    let nacFormateada = cliente.FechaNacimiento ? cliente.FechaNacimiento : 'N/D';
+
     let card = document.createElement('div');
     card.className = 'sidebar-card';
     card.innerHTML = `
@@ -198,8 +413,11 @@ function agregarAHistorialLateral(cliente) {
             <button class="btn-ver-mini" onclick='abrirModal(${JSON.stringify(cliente)})'>👁️ Ver</button>
         </div>
         <div class="s-nombre" title="${nombreCompleto}">${nombreCompleto}</div>
-        <div class="s-detalles-row"><span class="s-detalles">Nac: ${cliente.FechaNacimiento || 'N/D'}</span></div>
+        <div class="s-detalles-row">
+            <span class="s-detalles">Nac: ${nacFormateada}</span>
+        </div>
     `;
+
     lista.prepend(card);
 }
 
@@ -207,7 +425,7 @@ function abrirModal(cliente) {
     document.getElementById('mId').innerText = cliente.ID;
     document.getElementById('mNombre').innerText = cliente.Nombres + " " + cliente.Apellidos;
     document.getElementById('mGenero').innerText = cliente.Genero || 'N/D';
-    document.getElementById('mNacimiento').innerText = cliente.FechaNacimiento || 'N/D';
+    document.getElementById('mNacimiento').innerText = cliente.FechaNacimiento ? cliente.FechaNacimiento : 'N/D';
     document.getElementById('mPadre').innerText = cliente.Padre || 'No registrado';
     document.getElementById('mMadre').innerText = cliente.Madre || 'No registrado';
     document.getElementById('mLugar').innerText = cliente.LugarNacimiento || 'No registrado';
@@ -215,8 +433,14 @@ function abrirModal(cliente) {
     document.getElementById('modalDetalles').style.display = 'flex';
 }
 
-function cerrarModal() { document.getElementById('modalDetalles').style.display = 'none'; }
-function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
+function cerrarModal() { 
+    document.getElementById('modalDetalles').style.display = 'none'; 
+}
+
+function cerrarModalAfuera(event) { 
+    if (event.target.id === 'modalDetalles') cerrarModal(); 
+}
 </script>
+
 </body>
 </html>
