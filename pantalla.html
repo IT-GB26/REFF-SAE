@@ -7,7 +7,6 @@
         * { box-sizing: border-box; }
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* Botón de inicio para desbloquear audio */
         #audioOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.95); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 20px; }
         #audioOverlay h2 { font-size: 32px; margin-bottom: 10px; color: #38bdf8; }
         #audioOverlay p { font-size: 18px; color: #94a3b8; margin-bottom: 30px; max-width: 500px; }
@@ -39,10 +38,7 @@
             margin: 10px 0; 
             transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
         }
-        .animar-llamado {
-            transform: scale(1.1);
-            color: #0284c7;
-        }
+        .animar-llamado { transform: scale(1.1); color: #0284c7; }
 
         .ventanilla-asignada { font-size: 42px; color: #0284c7; font-weight: 800; margin-top: 15px; background: #e0f2fe; padding: 10px 30px; border-radius: 14px; display: inline-block; letter-spacing: 1px; }
 
@@ -55,10 +51,9 @@
 </head>
 <body>
 
-<!-- Capa de inicio obligatorio para habilitar los permisos de voz del navegador -->
 <div id="audioOverlay">
     <h2>Sistema de Turnos Activo</h2>
-    <p>Haga clic en el botón para iniciar la reproducción de videos y habilitar el altavoz de llamados por voz en la sala de espera.</p>
+    <p>Haga clic en el botón para iniciar la reproducción fluida de videos y habilitar el altavoz de la sala.</p>
     <button onclick="iniciarSistemaPantalla()">Iniciar Pantalla</button>
 </div>
 
@@ -102,49 +97,31 @@ const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_
 let ultimoTimestampProcesado = 0;
 let colaTurnosVoz = [];
 let reproduciendoVozActiva = false;
-let hayTurnoEnLlamadoActivo = false;
 
 const listaVideos = [
     "videos/anuncio1.mp4",
     "videos/anuncio2.mp4",
-    "videos/anuncio3.mp4",
-    "videos/anuncio1.mp4",
-    "videos/anuncio4.mp4",
-    "videos/anuncio1.mp4",
-    "videos/anuncio5.mp4",
-    "videos/anuncio1.mp4",
-    "videos/anuncio6.mp4",
-    "videos/anuncio1.mp4",
+    "videos/anuncio3.mp4"
 ];
 let indiceVideoActual = 0;
 const contenedorMultimedia = document.getElementById('contenedorMultimedia');
 
 function iniciarSistemaPantalla() {
     document.getElementById('audioOverlay').style.display = 'none';
-
     let dummyUtterance = new SpeechSynthesisUtterance("");
     window.speechSynthesis.speak(dummyUtterance);
-
     iniciarReproductorVideos();
+    setInterval(sincronizarPantalla, 1200); //[cite: 3]
 }
 
 function iniciarReproductorVideos() {
-    contenedorMultimedia.innerHTML = `<video id="videoPlaylist" autoplay playsinline></video>`;
     let elementoVideo = document.getElementById('videoPlaylist');
+    if (!elementoVideo) return;
     
-    if (listaVideos.length === 0) return;
+    elementoVideo.volume = 0.35; 
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
-    
-    // Volumen estandarizado al 35% para que no compita con la voz
-    elementoVideo.volume = 0.35; 
-    
-    // Si hay un turno activo en llamado, se mantiene en mute; de lo contrario, suena estandarizado
-    elementoVideo.muted = hayTurnoEnLlamadoActivo;
-
-    elementoVideo.play().catch(err => {
-        console.log("Error al reproducir video:", err);
-    });
+    elementoVideo.play().catch(err => console.log("Reproducción automática pendiente", err));
     
     elementoVideo.onended = () => {
         indiceVideoActual = (indiceVideoActual + 1) % listaVideos.length;
@@ -192,9 +169,7 @@ function procesarColaVoz() {
     let item = colaTurnosVoz.shift();
 
     let elementoVideo = document.getElementById('videoPlaylist');
-    if (elementoVideo) {
-        elementoVideo.muted = true; // Silencia el video para que la voz se escuche clara
-    }
+    if (elementoVideo) elementoVideo.muted = true; //[cite: 3]
 
     window.speechSynthesis.cancel();
 
@@ -213,13 +188,15 @@ function procesarColaVoz() {
     if (vozSuave) { utterance.voice = vozSuave; }
 
     utterance.onend = () => {
+        if (elementoVideo) elementoVideo.muted = false; //[cite: 3]
         reproduciendoVozActiva = false;
-        setTimeout(procesarColaVoz, 300);
+        setTimeout(procesarColaVoz, 200);
     };
 
     utterance.onerror = () => {
+        if (elementoVideo) elementoVideo.muted = false; //[cite: 3]
         reproduciendoVozActiva = false;
-        setTimeout(procesarColaVoz, 300);
+        setTimeout(procesarColaVoz, 200);
     };
 
     window.speechSynthesis.speak(utterance);
@@ -228,9 +205,7 @@ function procesarColaVoz() {
 function activarAnimacionTurno() {
     let elemento = document.getElementById('lblNumero');
     elemento.classList.add('animar-llamado');
-    setTimeout(() => {
-        elemento.classList.remove('animar-llamado');
-    }, 2500);
+    setTimeout(() => { elemento.classList.remove('animar-llamado'); }, 2500);
 }
 
 async function sincronizarPantalla() {
@@ -254,31 +229,18 @@ async function sincronizarPantalla() {
         }
 
         let llamados = datos.filter(row => row.Estado.toLowerCase() === "llamado");
-        
         if (llamados.length > 0) {
             llamados.sort((a, b) => b.UltimoLlamado - a.UltimoLlamado);
             let actual = llamados[0];
 
-            hayTurnoEnLlamadoActivo = true;
-
             if (actual.UltimoLlamado > ultimoTimestampProcesado) {
                 ultimoTimestampProcesado = actual.UltimoLlamado;
-
                 document.getElementById('lblNumero').innerText = actual.ID;
                 document.getElementById('lblVentanilla').innerText = "VENTANILLA " + (actual.Ventanilla || "3");
 
                 activarAnimacionTurno();
-                
                 colaTurnosVoz.push({ id: actual.ID, ventanilla: actual.Ventanilla || "3" });
                 procesarColaVoz();
-            }
-        } else {
-            if (hayTurnoEnLlamadoActivo) {
-                hayTurnoEnLlamadoActivo = false;
-                let elementoVideo = document.getElementById('videoPlaylist');
-                if (elementoVideo) {
-                    elementoVideo.muted = false;
-                }
             }
         }
     } catch (e) {
@@ -287,9 +249,6 @@ async function sincronizarPantalla() {
 }
 
 window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-
-setInterval(sincronizarPantalla, 1000);
 </script>
-
 </body>
 </html>
