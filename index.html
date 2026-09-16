@@ -154,7 +154,7 @@
 
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
-        <span class="proximo-turno-num" id="lblSiguienteTurno">Cargando...</span>
+        <span class="proximo-turno-num" id="lblSiguienteTurno">A1</span>
     </div>
 
     <form id="registroForm">
@@ -195,11 +195,12 @@
 
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
-let ultimoNumeroRegistrado = 0;
+let contadorTurnoLocal = 1;
 
-async function obtenerUltimoTurno() {
+// Carga inicial rápida y ligera sin bloqueos
+async function inicializarContador() {
     try {
-        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
+        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime(), { mode: 'cors' });
         let datos = await res.json();
         let hoyStr = new Date().toDateString();
         if (datos && datos.length > 0) {
@@ -216,21 +217,19 @@ async function obtenerUltimoTurno() {
                     }
                 }
             });
-            ultimoNumeroRegistrado = maxNum;
+            if (maxNum > 0) contadorTurnoLocal = maxNum + 1;
         }
-        actualizarSiguienteVisual();
     } catch (e) {
-        document.getElementById('lblSiguienteTurno').innerText = "A1";
+        console.log("Modo local activo");
     }
+    actualizarSiguienteVisual();
 }
 
 function actualizarSiguienteVisual() {
-    let siguiente = ultimoNumeroRegistrado + 1;
-    let formateado = "A" + siguiente; // Formato limpio A1, A2... sin ceros
-    document.getElementById('lblSiguienteTurno').innerText = formateado;
+    document.getElementById('lblSiguienteTurno').innerText = "A" + contadorTurnoLocal;
 }
 
-obtenerUltimoTurno();
+inicializarContador();
 
 document.getElementById('registroForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -243,6 +242,8 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     let madre = document.getElementById('madre').value.trim();
     let lugarNacimiento = document.getElementById('lugarNacimiento').value.trim();
     let comentarios = document.getElementById('comentarios').value.trim();
+
+    let idGenerado = "A" + contadorTurnoLocal;
 
     let datos = {
         accion: "nuevo_registro",
@@ -261,17 +262,14 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     btn.disabled = true;
 
     try {
-        let response = await fetch(URL_WEB_APP, {
+        // Envío asíncrono optimizado con no-cors para evitar bloqueos del navegador
+        fetch(URL_WEB_APP, {
             method: 'POST',
-            mode: 'no-cors', // Evita bloqueos de seguridad del navegador con Google Apps Script
+            mode: 'no-cors',
             body: JSON.stringify(datos)
         });
-        
-        // Como 'no-cors' no deja leer directamente el JSON de respuesta de forma normal, 
-        // incrementamos de manera local y fluida el contador basándonos en el siguiente turno previsto
-        let idGenerado = "A" + (ultimoNumeroRegistrado + 1);
-        ultimoNumeroRegistrado++;
 
+        contadorTurnoLocal++;
         document.getElementById('registroForm').reset();
         
         let clienteObj = {
@@ -297,10 +295,10 @@ document.getElementById('registroForm').addEventListener('submit', async functio
             btn.innerText = "Guardar e Imprimir Turno";
             btn.disabled = false;
             document.getElementById('nombres').focus();
-        }, 1200);
+        }, 1000);
 
     } catch (error) {
-        alert("Error al conectar con la base de datos.");
+        alert("Error al enviar los datos.");
         btn.style.backgroundColor = "#0284c7";
         btn.innerText = "Guardar e Imprimir Turno";
         btn.disabled = false;
