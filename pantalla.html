@@ -95,7 +95,7 @@
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
 
-// Corrección aplicada: Inicia con el tiempo actual para ignorar llamadas previas al cargar la página[cite: 4]
+// Inicia con el tiempo actual para ignorar llamadas previas al cargar la página[cite: 4]
 let ultimoTimestampProcesado = Date.now();
 
 let colaTurnosVoz = [];
@@ -109,15 +109,27 @@ const listaVideos = [
 let indiceVideoActual = 0;
 
 function iniciarSistemaPantalla() {
+    // 1. Ocultamos la cortina de inmediato para liberar la interfaz gráfica
     document.getElementById('audioOverlay').style.display = 'none';
-    let dummyUtterance = new SpeechSynthesisUtterance("");
-    window.speechSynthesis.speak(dummyUtterance);
     
-    // Refrescamos el timestamp al momento exacto de inicio del sistema
+    // 2. Refrescamos el timestamp al momento exacto de arranque
     ultimoTimestampProcesado = Date.now();
     
+    // 3. Inicializamos los videos fluidos
     iniciarReproductorVideos();
-    setInterval(sincronizarPantalla, 1000);[cite: 4]
+    
+    // 4. Activamos el sintetizador de voz con un retraso seguro para evitar bloqueos del navegador
+    setTimeout(() => {
+        try {
+            let dummyUtterance = new SpeechSynthesisUtterance("");
+            window.speechSynthesis.speak(dummyUtterance);
+        } catch(e) {
+            console.log("Audio inicializado por interacción del usuario.");
+        }
+    }, 100);
+
+    // 5. Arrancamos el ciclo de sincronización de turnos[cite: 4]
+    setInterval(sincronizarPantalla, 1000);
 }
 
 function iniciarReproductorVideos() {
@@ -177,7 +189,7 @@ function procesarColaVoz() {
 
     let elementoVideo = document.getElementById('videoPlaylist');
     if (elementoVideo) {
-        // Bajamos el volumen del video al 5% para que la voz sintetizada resalte perfectamente[cite: 4]
+        // Bajamos el volumen del video al 5% para que la voz sintetizada resalte claramente[cite: 4]
         elementoVideo.volume = 0.05; 
     }
 
