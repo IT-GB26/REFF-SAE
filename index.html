@@ -154,7 +154,7 @@
 
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
-        <span class="proximo-turno-num" id="lblSiguienteTurno">A29</span>
+        <span class="proximo-turno-num" id="lblSiguienteTurno">A1</span>
     </div>
 
     <form id="registroForm">
@@ -195,28 +195,41 @@
 
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
+let contadorTurnoLocal = 1;
 
-// Inicializamos en 29 para arrancar exactamente en el A29
-let contadorTurnoLocal = 29;
+async function sincronizarSiguienteTurno() {
+    try {
+        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
+        let datos = await res.json();
+        let hoyStr = new Date().toDateString();
+        let maxNum = 0;
 
-let fechaHoy = new Date().toDateString();
-let fechaGuardada = localStorage.getItem("turno_fecha_actual") || "";
-
-if (fechaGuardada === fechaHoy) {
-    let ultimoGuardado = parseInt(localStorage.getItem("ultimo_turno_numero") || "28", 10);
-    if (!isNaN(ultimoGuardado) && ultimoGuardado >= 28) {
-        contadorTurnoLocal = ultimoGuardado + 1;
+        datos.forEach(row => {
+            if (row.FechaHora) {
+                let d = new Date(row.FechaHora);
+                if (!isNaN(d.getTime()) && d.toDateString() === hoyStr) {
+                    let match = String(row.ID).match(/\d+/);
+                    if (match) {
+                        let num = parseInt(match[0], 10);
+                        if (num > maxNum) maxNum = num;
+                    }
+                }
+            }
+        });
+        contadorTurnoLocal = maxNum + 1;
+        actualizarSiguienteVisual();
+    } catch(e) {
+        console.error("Error sincronizando turno inicial:", e);
     }
-} else {
-    localStorage.setItem("turno_fecha_actual", fechaHoy);
-    localStorage.setItem("ultimo_turno_numero", "28");
 }
 
 function actualizarSiguienteVisual() {
     document.getElementById('lblSiguienteTurno').innerText = "A" + contadorTurnoLocal;
 }
 
-actualizarSiguienteVisual();
+window.onload = function() {
+    sincronizarSiguienteTurno();
+};
 
 document.getElementById('registroForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -255,9 +268,7 @@ document.getElementById('registroForm').addEventListener('submit', async functio
             body: JSON.stringify(datos)
         });
 
-        localStorage.setItem("ultimo_turno_numero", contadorTurnoLocal.toString());
         contadorTurnoLocal++;
-
         document.getElementById('registroForm').reset();
         
         let clienteObj = {
@@ -283,7 +294,7 @@ document.getElementById('registroForm').addEventListener('submit', async functio
             btn.innerText = "Guardar e Imprimir Turno";
             btn.disabled = false;
             document.getElementById('nombres').focus();
-        }, 1000);
+        }, 800);
 
     } catch (error) {
         alert("Error al enviar los datos.");
