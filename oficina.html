@@ -156,7 +156,7 @@ let vistaActual = 'pendientes';
 let datosCache = [];
 let usuarioActual = localStorage.getItem("agente_nombre_fijo") || "";
 let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
-let ultimoTimestampAviso = 0;
+let ultimoTimestampAviso = Date.now(); // Inicia con el tiempo actual para ignorar avisos viejos al iniciar
 let temporizadorCierrePopup = null;
 
 window.onload = function() {
@@ -164,12 +164,27 @@ window.onload = function() {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
         document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
+        
+        // Sincronizar el timestamp inicial de avisos para no mostrar alertas pasadas al loguearse
+        inicializarUltimoAviso();
+        
         cargarDatos();
         setInterval(verificarMensajesSupervisor, 3000);
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
 };
+
+async function inicializarUltimoAviso() {
+    try {
+        let res = await fetch(URL_WEB_APP + "?accion=obtener_avisos&t=" + new Date().getTime());
+        let avisos = await res.json();
+        let miAviso = avisos.find(a => a.ventanilla === ventanillaFija);
+        if (miAviso && miAviso.timestamp) {
+            ultimoTimestampAviso = miAviso.timestamp; // Toma el último existente para que no salte al entrar
+        }
+    } catch(e) {}
+}
 
 function guardarUsuario() {
     let input = document.getElementById('inputUsuario').value.trim();
@@ -183,6 +198,8 @@ function guardarUsuario() {
     document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
     document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
     document.getElementById('loginOverlay').style.display = 'none';
+    
+    inicializarUltimoAviso();
     cargarDatos();
     setInterval(verificarMensajesSupervisor, 3000);
 }
@@ -200,6 +217,8 @@ async function verificarMensajesSupervisor() {
         let res = await fetch(URL_WEB_APP + "?accion=obtener_avisos&t=" + new Date().getTime());
         let avisos = await res.json();
         let miAviso = avisos.find(a => a.ventanilla === ventanillaFija);
+        
+        // Solo salta el popup si hay un mensaje nuevo con un timestamp superior al registrado
         if (miAviso && miAviso.timestamp > ultimoTimestampAviso) {
             ultimoTimestampAviso = miAviso.timestamp;
             mostrarPopupAviso(miAviso.mensaje);
@@ -215,7 +234,7 @@ function mostrarPopupAviso(texto) {
     textoDiv.innerText = texto;
     popup.style.display = 'block';
 
-    // Reiniciar barra de tiempo
+    // Reiniciar barra de tiempo de 15 segundos
     timerBar.style.transition = 'none';
     timerBar.style.width = '100%';
     setTimeout(() => {
@@ -225,10 +244,9 @@ function mostrarPopupAviso(texto) {
 
     if (navigator.vibrate) navigator.vibrate(200);
 
-    // Limpiar temporizador previo si existía
     if (temporizadorCierrePopup) clearTimeout(temporizadorCierrePopup);
 
-    // Cerrar automáticamente a los 15 segundos
+    // Ocultar automáticamente a los 15 segundos
     temporizadorCierrePopup = setTimeout(() => {
         cerrarPopup();
     }, 15000);
