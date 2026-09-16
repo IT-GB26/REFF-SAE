@@ -102,6 +102,7 @@ const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_
 let ultimoTimestampProcesado = 0;
 let colaTurnosVoz = [];
 let reproduciendoVozActiva = false;
+let hayTurnoEnLlamadoActivo = false;
 
 const listaVideos = [
     "videos/anuncio1.mp4",
@@ -119,26 +120,28 @@ let indiceVideoActual = 0;
 const contenedorMultimedia = document.getElementById('contenedorMultimedia');
 
 function iniciarSistemaPantalla() {
-    // Ocultar la pantalla de inicio al hacer clic
     document.getElementById('audioOverlay').style.display = 'none';
 
-    // Disparar síntesis de voz en vacío para forzar al navegador a cargar los canales de audio del sistema
     let dummyUtterance = new SpeechSynthesisUtterance("");
     window.speechSynthesis.speak(dummyUtterance);
 
-    // Iniciar reproductor de videos con audio activo
     iniciarReproductorVideos();
 }
 
 function iniciarReproductorVideos() {
     contenedorMultimedia.innerHTML = `<video id="videoPlaylist" autoplay playsinline></video>`;
-    const elementoVideo = document.getElementById('videoPlaylist');
+    let elementoVideo = document.getElementById('videoPlaylist');
     
     if (listaVideos.length === 0) return;
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
     
-    elementoVideo.muted = false;
+    // Volumen estandarizado al 35% para que no compita con la voz
+    elementoVideo.volume = 0.35; 
+    
+    // Si hay un turno activo en llamado, se mantiene en mute; de lo contrario, suena estandarizado
+    elementoVideo.muted = hayTurnoEnLlamadoActivo;
+
     elementoVideo.play().catch(err => {
         console.log("Error al reproducir video:", err);
     });
@@ -210,17 +213,11 @@ function procesarColaVoz() {
     if (vozSuave) { utterance.voice = vozSuave; }
 
     utterance.onend = () => {
-        if (elementoVideo) {
-            elementoVideo.muted = false; // Restaura el audio del video al terminar el llamado
-        }
         reproduciendoVozActiva = false;
         setTimeout(procesarColaVoz, 300);
     };
 
     utterance.onerror = () => {
-        if (elementoVideo) {
-            elementoVideo.muted = false;
-        }
         reproduciendoVozActiva = false;
         setTimeout(procesarColaVoz, 300);
     };
@@ -262,6 +259,8 @@ async function sincronizarPantalla() {
             llamados.sort((a, b) => b.UltimoLlamado - a.UltimoLlamado);
             let actual = llamados[0];
 
+            hayTurnoEnLlamadoActivo = true;
+
             if (actual.UltimoLlamado > ultimoTimestampProcesado) {
                 ultimoTimestampProcesado = actual.UltimoLlamado;
 
@@ -272,6 +271,14 @@ async function sincronizarPantalla() {
                 
                 colaTurnosVoz.push({ id: actual.ID, ventanilla: actual.Ventanilla || "3" });
                 procesarColaVoz();
+            }
+        } else {
+            if (hayTurnoEnLlamadoActivo) {
+                hayTurnoEnLlamadoActivo = false;
+                let elementoVideo = document.getElementById('videoPlaylist');
+                if (elementoVideo) {
+                    elementoVideo.muted = false;
+                }
             }
         }
     } catch (e) {
