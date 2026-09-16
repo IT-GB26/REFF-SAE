@@ -154,7 +154,7 @@
 
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
-        <span class="proximo-turno-num" id="lblSiguienteTurno">Cargando...</span>
+        <span class="proximo-turno-num" id="lblSiguienteTurno">A1</span>
     </div>
 
     <form id="registroForm">
@@ -195,42 +195,28 @@
 
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
-let contadorTurnoLocal = 1;
 
-async function inicializarContador() {
-    try {
-        // Usamos redirect: 'follow' para permitir que Google Apps Script devuelva los datos sin bloqueo
-        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime(), { redirect: 'follow' });
-        let datos = await res.json();
-        let hoyStr = new Date().toDateString();
-        
-        if (datos && datos.length > 0) {
-            let maxNum = 0;
-            datos.forEach(row => {
-                if (row.ID && row.FechaHora) {
-                    let fechaFila = new Date(row.FechaHora).toDateString();
-                    if (fechaFila === hoyStr) {
-                        let match = row.ID.match(/\d+/);
-                        if (match) {
-                            let n = parseInt(match[0], 10);
-                            if (n > maxNum) maxNum = n;
-                        }
-                    }
-                }
-            });
-            if (maxNum > 0) contadorTurnoLocal = maxNum + 1;
-        }
-    } catch (e) {
-        console.log("Usando contador predeterminado", e);
+// Verificamos el día actual para reiniciar el contador automáticamente si cambió de fecha
+let fechaHoy = new Date().toDateString();
+let fechaGuardada = localStorage.getItem("turno_fecha_actual") || "";
+
+let contadorTurnoLocal = 1;
+if (fechaGuardada === fechaHoy) {
+    let ultimoGuardado = parseInt(localStorage.getItem("ultimo_turno_numero") || "0", 10);
+    if (!isNaN(ultimoGuardado)) {
+        contadorTurnoLocal = ultimoGuardado + 1;
     }
-    actualizarSiguienteVisual();
+} else {
+    localStorage.setItem("turno_fecha_actual", fechaHoy);
+    localStorage.setItem("ultimo_turno_numero", "0");
 }
 
 function actualizarSiguienteVisual() {
     document.getElementById('lblSiguienteTurno').innerText = "A" + contadorTurnoLocal;
 }
 
-inicializarContador();
+// Inicialización instantánea
+actualizarSiguienteVisual();
 
 document.getElementById('registroForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -263,13 +249,17 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     btn.disabled = true;
 
     try {
+        // Envío asíncrono limpio a Google Sheets sin congelar la interfaz
         fetch(URL_WEB_APP, {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify(datos)
         });
 
+        // Actualizamos memoria local de inmediato
+        localStorage.setItem("ultimo_turno_numero", contadorTurnoLocal.toString());
         contadorTurnoLocal++;
+
         document.getElementById('registroForm').reset();
         
         let clienteObj = {
