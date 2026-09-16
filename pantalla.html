@@ -7,6 +7,13 @@
         * { box-sizing: border-box; }
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
+        /* Botón de inicio para desbloquear audio */
+        #audioOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.95); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 20px; }
+        #audioOverlay h2 { font-size: 32px; margin-bottom: 10px; color: #38bdf8; }
+        #audioOverlay p { font-size: 18px; color: #94a3b8; margin-bottom: 30px; max-width: 500px; }
+        #audioOverlay button { background: #0284c7; color: white; border: none; padding: 16px 40px; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 20px rgba(2, 132, 199, 0.4); transition: background 0.2s; }
+        #audioOverlay button:hover { background: #0369a1; }
+
         header { background: #ffffff; height: 10vh; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         header img { max-height: 50px; }
         header h1 { margin: 0; font-size: 24px; color: #1e293b; font-weight: 700; letter-spacing: 0.5px; }
@@ -48,6 +55,13 @@
 </head>
 <body>
 
+<!-- Capa de inicio obligatorio para habilitar los permisos de voz del navegador -->
+<div id="audioOverlay">
+    <h2>Sistema de Turnos Activo</h2>
+    <p>Haga clic en el botón para iniciar la reproducción de videos y habilitar el altavoz de llamados por voz en la sala de espera.</p>
+    <button onclick="iniciarSistemaPantalla()">Iniciar Pantalla</button>
+</div>
+
 <header>
     <img src="img/logo.png" alt="Logo">
     <h1>SALA DE ESPERA</h1>
@@ -58,7 +72,7 @@
 
 <div class="main-layout">
     <div class="ads-side" id="contenedorMultimedia">
-        <video id="videoPlaylist" autoplay playsinline muted></video>
+        <video id="videoPlaylist" autoplay playsinline></video>
     </div>
 
     <div class="center-stage">
@@ -104,21 +118,29 @@ const listaVideos = [
 let indiceVideoActual = 0;
 const contenedorMultimedia = document.getElementById('contenedorMultimedia');
 
+function iniciarSistemaPantalla() {
+    // Ocultar la pantalla de inicio al hacer clic
+    document.getElementById('audioOverlay').style.display = 'none';
+
+    // Disparar síntesis de voz en vacío para forzar al navegador a cargar los canales de audio del sistema
+    let dummyUtterance = new SpeechSynthesisUtterance("");
+    window.speechSynthesis.speak(dummyUtterance);
+
+    // Iniciar reproductor de videos con audio activo
+    iniciarReproductorVideos();
+}
+
 function iniciarReproductorVideos() {
-    contenedorMultimedia.innerHTML = `<video id="videoPlaylist" autoplay playsinline muted></video>`;
+    contenedorMultimedia.innerHTML = `<video id="videoPlaylist" autoplay playsinline></video>`;
     const elementoVideo = document.getElementById('videoPlaylist');
     
     if (listaVideos.length === 0) return;
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
     
-    // Forzar reproducción automática con truco de habilitación de audio inmediata
-    elementoVideo.play().then(() => {
-        setTimeout(() => {
-            elementoVideo.muted = false; // Quita el silencio de manera automática a los 150 milisegundos de haber iniciado
-        }, 150);
-    }).catch(err => {
-        console.log("Reproducción automática bloqueada por políticas estrictas del navegador", err);
+    elementoVideo.muted = false;
+    elementoVideo.play().catch(err => {
+        console.log("Error al reproducir video:", err);
     });
     
     elementoVideo.onended = () => {
@@ -126,8 +148,6 @@ function iniciarReproductorVideos() {
         iniciarReproductorVideos();
     };
 }
-
-iniciarReproductorVideos();
 
 setInterval(() => {
     document.getElementById('reloj').innerText = new Date().toLocaleTimeString();
@@ -170,7 +190,7 @@ function procesarColaVoz() {
 
     let elementoVideo = document.getElementById('videoPlaylist');
     if (elementoVideo) {
-        elementoVideo.muted = true; // Se silencia al llamar al cliente para dar paso a la voz
+        elementoVideo.muted = true; // Silencia el video para que la voz se escuche clara
     }
 
     window.speechSynthesis.cancel();
@@ -191,7 +211,7 @@ function procesarColaVoz() {
 
     utterance.onend = () => {
         if (elementoVideo) {
-            elementoVideo.muted = false; // Restaura el audio del video automáticamente al terminar el llamado
+            elementoVideo.muted = false; // Restaura el audio del video al terminar el llamado
         }
         reproduciendoVozActiva = false;
         setTimeout(procesarColaVoz, 300);
@@ -262,7 +282,6 @@ async function sincronizarPantalla() {
 window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
 setInterval(sincronizarPantalla, 1000);
-sincronizarPantalla();
 </script>
 
 </body>
