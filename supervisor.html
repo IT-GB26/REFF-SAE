@@ -71,28 +71,26 @@
             </div>
         </div>
         <div class="sector-selector">
-            <button class="sector-btn active" id="btnSector1" onclick="cambiarSector('sector1')">El Congo </button>
+            <button class="sector-btn active" id="btnSector1" onclick="cambiarSector('sector1')">El Congo</button>
             <button class="sector-btn" id="btnSector2" onclick="cambiarSector('sector2')">Coatepeque</button>
         </div>
     </div>
 
-    <!-- KPIs exclusivos de HOY -->
     <div class="kpi-grid">
         <div class="kpi-card"><div class="kpi-title">Atendidos Hoy</div><div class="kpi-value" id="kpiAtendidos">0</div></div>
         <div class="kpi-card"><div class="kpi-title">En Cola / Pendientes Hoy</div><div class="kpi-value" id="kpiPendientes" style="color: var(--warning);">0</div></div>
         <div class="kpi-card"><div class="kpi-title">En Llamado Actual Hoy</div><div class="kpi-value" id="kpiLlamados" style="color: var(--accent);">0</div></div>
     </div>
 
-    <!-- Herramientas de Jefatura -->
     <div class="toolbar">
         <div class="export-group">
-            <span style="font-weight: 700; font-size: 13px;">Descargar Histórico:</span>
+            <span style="font-weight: 700; font-size: 13px;">Descargar Reporte:</span>
             <select id="selectPeriodoExport">
                 <option value="mes">Mes Actual (Mensual)</option>
                 <option value="trimestre">Últimos 3 Meses (Trimestral)</option>
                 <option value="todo">Histórico Completo</option>
             </select>
-            <button class="btn-action btn-export" onclick="exportarBaseDatos()">📥 Descargar Excel/CSV</button>
+            <button class="btn-action btn-export" onclick="exportarReporteProfesionalExcel()">📊 Descargar Reporte Profesional Excel</button>
         </div>
         <div class="message-group">
             <select id="selectVentanillaDestino">
@@ -108,7 +106,7 @@
     <div class="card-table">
         <div class="table-header">
             <h3 id="tituloTabla">Flujo Diario - Sector 1</h3>
-            <span style="font-size: 13px; color: #64748b;">🔄 Actualización automática de hoy</span>
+            <span style="font-size: 13px; color: #64748b;">🔄 Actualización fluida automática</span>
         </div>
         <table>
             <thead>
@@ -123,7 +121,6 @@
     </div>
 </div>
 
-<!-- Modal para ver detalles -->
 <div class="modal-overlay" id="modalDetalles" onclick="cerrarModalAfuera(event)">
     <div class="modal-content">
         <button class="close-modal" onclick="cerrarModal()">X</button>
@@ -153,21 +150,20 @@ function cambiarSector(sector) {
     sectorActivo = sector;
     document.getElementById('btnSector1').className = sector === 'sector1' ? 'sector-btn active' : 'sector-btn';
     document.getElementById('btnSector2').className = sector === 'sector2' ? 'sector-btn active' : 'sector-btn';
-    document.getElementById('tituloTabla').innerText = "Flujo Diario - " + (sector === 'sector1' ? 'Sector 1' : 'Sector 2');
+    document.getElementById('tituloTabla').innerText = "Flujo Diario - " + (sector === 'sector1' ? 'El Congo' : 'Coatepeque');
     cargarDatosSupervisor();
 }
 
 async function cargarDatosSupervisor() {
     let urlActiva = URLS_SECTORES[sectorActivo];
     if (!urlActiva || urlActiva.includes("URL_DEL_")) {
-        document.getElementById('tablaSupervisor').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ef4444; padding: 30px;">Configure la URL de la Web App para ${sectorActivo} en el código.</td></tr>`;
+        document.getElementById('tablaSupervisor').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ef4444; padding: 30px;">Configure la URL de la Web App para ${sectorActivo}.</td></tr>`;
         return;
     }
     try {
         let res = await fetch(urlActiva + "?t=" + new Date().getTime());
         datosGlobalesSector = await res.json();
         
-        // Filtrar exclusivamente los registros de HOY para las estadísticas y la tabla diaria
         let hoyStr = new Date().toDateString();
         let datosHoy = datosGlobalesSector.filter(row => {
             if (!row.FechaHora) return false;
@@ -183,13 +179,9 @@ function renderizarSupervisor(datosHoy) {
     let tbody = document.getElementById('tablaSupervisor');
     tbody.innerHTML = "";
 
-    let totalAtendidos = datosHoy.filter(d => d.Estado === "Resuelto").length;
-    let totalPendientes = datosHoy.filter(d => d.Estado === "Pendiente").length;
-    let totalLlamados = datosHoy.filter(d => d.Estado === "Llamado").length;
-
-    document.getElementById('kpiAtendidos').innerText = totalAtendidos;
-    document.getElementById('kpiPendientes').innerText = totalPendientes;
-    document.getElementById('kpiLlamados').innerText = totalLlamados;
+    document.getElementById('kpiAtendidos').innerText = datosHoy.filter(d => d.Estado === "Resuelto").length;
+    document.getElementById('kpiPendientes').innerText = datosHoy.filter(d => d.Estado === "Pendiente").length;
+    document.getElementById('kpiLlamados').innerText = datosHoy.filter(d => d.Estado === "Llamado").length;
 
     if (datosHoy.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b; padding: 30px;">No hay registros de atenciones para el día de hoy.</td></tr>`;
@@ -198,10 +190,7 @@ function renderizarSupervisor(datosHoy) {
 
     [...datosHoy].reverse().forEach(row => {
         let tr = document.createElement('tr');
-        let badgeClass = 'badge-pendiente';
-        if (row.Estado === 'Llamado') badgeClass = 'badge-llamado';
-        if (row.Estado === 'Resuelto') badgeClass = 'badge-resuelto';
-
+        let badgeClass = row.Estado === 'Llamado' ? 'badge-llamado' : (row.Estado === 'Resuelto' ? 'badge-resuelto' : 'badge-pendiente');
         let horaLimpia = '';
         try {
             let d = new Date(row.FechaHora);
@@ -239,9 +228,10 @@ function abrirModal(row) {
 function cerrarModal() { document.getElementById('modalDetalles').style.display = 'none'; }
 function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
 
-function exportarBaseDatos() {
+// GENERADOR DE REPORTE PROFESIONAL EXCEL (.XLS CON FORMATO CORPORATIVO Y ESTILOS)
+function exportarReporteProfesionalExcel() {
     if (!datosGlobalesSector || datosGlobalesSector.length === 0) {
-        alert("No hay datos para exportar.");
+        alert("No hay datos disponibles para exportar.");
         return;
     }
 
@@ -267,22 +257,65 @@ function exportarBaseDatos() {
         return;
     }
 
-    let csvContent = "data:text/csv;charset=utf-8,ID,Fecha/Hora,Nombres,Apellidos,Genero,Fecha Nacimiento,Padre,Madre,Lugar Nacimiento,Comentarios,Estado,Ventanilla,Atendido Por\r\n";
-    
+    // Estructura XML / HTML compatible con Excel para aplicar diseño profesional corporativo
+    let tablaHTML = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
+            <style>
+                .titulo { font-size: 16pt; font-weight: bold; color: #0f172a; text-align: center; background: #e0f2fe; height: 40px; vertical-align: middle; }
+                .subtitulo { font-size: 10pt; color: #64748b; text-align: center; font-style: italic; }
+                th { background-color: #0284c7; color: #ffffff; font-weight: bold; font-size: 11pt; text-align: center; border: 1px solid #0369a1; padding: 8px; }
+                td { border: 1px solid #cbd5e1; font-size: 10pt; padding: 6px; vertical-align: middle; }
+                .centro { text-align: center; }
+            </style>
+        </head>
+        <body>
+            <table>
+                <tr><td colspan="13" class="titulo">REPORTE OFICIAL DE ATENCIÓN DE CLIENTES - SECTOR ${sectorActivo.toUpperCase()}</td></tr>
+                <tr><td colspan="13" class="subtitulo">Generado el: ${new Date().toLocaleString()} | Periodo: ${periodo.toUpperCase()}</td></tr>
+                <tr><td colspan="13"></td></tr>
+                <tr>
+                    <th>Turno ID</th>
+                    <th>Fecha y Hora</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Género</th>
+                    <th>Fecha Nacimiento</th>
+                    <th>Padre</th>
+                    <th>Madre</th>
+                    <th>Lugar de Nacimiento</th>
+                    <th>Comentarios</th>
+                    <th>Estado</th>
+                    <th>Ventanilla</th>
+                    <th>Atendido Por</th>
+                </tr>`;
+
     filtrados.forEach(row => {
-        let fila = [
-            row.ID, row.FechaHora, `"${row.Nombres}"`, `"${row.Apellidos}"`, 
-            row.Genero, row.FechaNacimiento, `"${row.Padre || ''}"`, `"${row.Madre || ''}"`, 
-            `"${row.LugarNacimiento || ''}"`, `"${row.Comentarios || ''}"`, 
-            row.Estado, row.Ventanilla, `"${row.AtendidoPor || ''}"`
-        ];
-        csvContent += fila.join(",") + "\r\n";
+        tablaHTML += `
+            <tr>
+                <td class="centro"><b>${row.ID || ''}</b></td>
+                <td>${row.FechaHora || ''}</td>
+                <td>${row.Nombres || ''}</td>
+                <td>${row.Apellidos || ''}</td>
+                <td class="centro">${row.Genero || ''}</td>
+                <td class="centro">${row.FechaNacimiento ? row.FechaNacimiento.substring(0,10) : ''}</td>
+                <td>${row.Padre || ''}</td>
+                <td>${row.Madre || ''}</td>
+                <td>${row.LugarNacimiento || ''}</td>
+                <td>${row.Comentarios || ''}</td>
+                <td class="centro">${row.Estado || ''}</td>
+                <td class="centro">${row.Ventanilla || ''}</td>
+                <td>${row.AtendidoPor || ''}</td>
+            </tr>`;
     });
 
-    let encodedUri = encodeURI(csvContent);
+    tablaHTML += `</table></body></html>`;
+
+    let blob = new Blob(['\ufeff' + tablaHTML], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     let link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Reporte_Atenciones_${sectorActivo}_${periodo}.csv`);
+    link.href = URL.createObjectURL(blob);
+    link.download = `Reporte_Profesional_${sectorActivo}_${periodo}.xls`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -293,9 +326,8 @@ async function enviarMensajeSupervisor() {
     let mensaje = document.getElementById('inputMensajeJefatura').value.trim();
     if (!mensaje) { alert("Escriba un mensaje."); return; }
 
-    let urlActiva = URLS_SECTORES[sectorActivo];
     try {
-        await fetch(urlActiva, {
+        await fetch(URLS_SECTORES[sectorActivo], {
             method: 'POST',
             body: JSON.stringify({ accion: "enviar_mensaje", ventanilla: ventanilla, mensaje: mensaje })
         });
@@ -303,7 +335,6 @@ async function enviarMensajeSupervisor() {
         let toast = document.getElementById('toastExito');
         toast.style.display = 'inline-block';
         setTimeout(() => { toast.style.display = 'none'; }, 3000);
-
         document.getElementById('inputMensajeJefatura').value = "";
     } catch(e) { alert("Error al enviar aviso."); }
 }
