@@ -110,14 +110,13 @@ function iniciarSistemaPantalla() {
     let dummyUtterance = new SpeechSynthesisUtterance("");
     window.speechSynthesis.speak(dummyUtterance);
     iniciarReproductorVideos();
-    setInterval(sincronizarPantalla, 1000);[cite: 3]
+    setInterval(sincronizarPantalla, 1000);
 }
 
 function iniciarReproductorVideos() {
     let elementoVideo = document.getElementById('videoPlaylist');
     if (!elementoVideo) return;
     
-    // Volumen estandarizado base del video en 30%
     elementoVideo.volume = 0.30; 
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
@@ -170,7 +169,6 @@ function procesarColaVoz() {
 
     let elementoVideo = document.getElementById('videoPlaylist');
     if (elementoVideo) {
-        // Bajamos el volumen del video al 5% para que la voz sintetizada resalte perfectamente sin apagar el video
         elementoVideo.volume = 0.05; 
     }
 
@@ -184,7 +182,7 @@ function procesarColaVoz() {
     utterance.lang = 'es-ES';
     utterance.rate = 0.90;  
     utterance.pitch = 1.0; 
-    utterance.volume = 1.0; // Voz clara al máximo
+    utterance.volume = 1.0;
 
     let voces = window.speechSynthesis.getVoices();
     let vozSuave = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Helena')));
@@ -192,7 +190,6 @@ function procesarColaVoz() {
 
     utterance.onend = () => {
         if (elementoVideo) {
-            // Restauramos el volumen estandarizado del video
             elementoVideo.volume = 0.30; 
         }
         reproduciendoVozActiva = false;
