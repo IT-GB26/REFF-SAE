@@ -65,6 +65,7 @@
             flex-direction: column;
             gap: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: relative;
         }
         .sidebar-card-header {
             display: flex;
@@ -76,14 +77,6 @@
             font-weight: 900;
             color: #0284c7;
         }
-        .s-badge {
-            background: #e0f2fe;
-            color: #0369a1;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
         .s-nombre {
             font-size: 13px;
             font-weight: 700;
@@ -91,11 +84,29 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 210px;
+        }
+        .s-detalles-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
         }
         .s-detalles {
             font-size: 11px;
             color: #64748b;
         }
+        .btn-ver-mini {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .btn-ver-mini:hover { background: #0369a1; }
 
         /* Indicador del próximo turno en el formulario */
         .proximo-turno-box {
@@ -185,6 +196,13 @@
         }
         button:hover { background: #0369a1; }
         button:active { transform: scale(0.98); }
+
+        /* Estilos para el Modal de Detalles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .modal-content h3 { margin-top: 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .modal-content p { margin: 10px 0; font-size: 14px; color: #334155; line-height: 1.4; }
+        .close-modal { position: absolute; top: 15px; right: 20px; background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -196,7 +214,6 @@
     </div>
     <h2>Registro de Nuevo Cliente</h2>
 
-    <!-- Caja que muestra el número consecutivo con el que saldrá el registro -->
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
         <span class="proximo-turno-num" id="lblSiguienteTurno">Cargando...</span>
@@ -253,17 +270,30 @@
     </div>
 </div>
 
+<!-- Ventana Modal para Ver Detalles Completos -->
+<div class="modal-overlay" id="modalDetalles" onclick="cerrarModalAfuera(event)">
+    <div class="modal-content">
+        <button class="close-modal" onclick="cerrarModal()">X</button>
+        <h3>Detalles del Turno <span id="mId"></span></h3>
+        <p><strong>Cliente:</strong> <span id="mNombre"></span></p>
+        <p><strong>Género:</strong> <span id="mGenero"></span></p>
+        <p><strong>Fecha de Nacimiento:</strong> <span id="mNacimiento"></span></p>
+        <p><strong>Padre:</strong> <span id="mPadre"></span></p>
+        <p><strong>Madre:</strong> <span id="mMadre"></span></p>
+        <p><strong>Lugar de Nacimiento:</strong> <span id="mLugar"></span></p>
+        <p><strong>Comentarios:</strong> <span id="mComentarios"></span></p>
+    </div>
+</div>
+
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
 let ultimoNumeroRegistrado = 0;
 
-// Al cargar la página, consultamos a la base de datos el último número para saber cuál sigue
 async function obtenerUltimoTurno() {
     try {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
         let datos = await res.json();
         if (datos && datos.length > 0) {
-            // Buscamos el mayor número numérico entre los IDs existentes (ej. asumiendo formato A001, A002...)
             let maxNum = 0;
             datos.forEach(row => {
                 let match = row.ID.match(/\d+/);
@@ -293,18 +323,23 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     
     let nombres = document.getElementById('nombres').value.trim();
     let apellidos = document.getElementById('apellidos').value.trim();
-    let nacimiento = document.getElementById('fechaNacimiento').value || "No especificada";
+    let genero = document.getElementById('genero').value;
+    let fechaNacimiento = document.getElementById('fechaNacimiento').value;
+    let padre = document.getElementById('padre').value.trim();
+    let madre = document.getElementById('madre').value.trim();
+    let lugarNacimiento = document.getElementById('lugarNacimiento').value.trim();
+    let comentarios = document.getElementById('comentarios').value.trim();
 
     let datos = {
         accion: "nuevo_registro",
         nombres: nombres,
         apellidos: apellidos,
-        genero: document.getElementById('genero').value,
-        fechaNacimiento: document.getElementById('fechaNacimiento').value,
-        padre: document.getElementById('padre').value.trim(),
-        madre: document.getElementById('madre').value.trim(),
-        lugarNacimiento: document.getElementById('lugarNacimiento').value.trim(),
-        comentarios: document.getElementById('comentarios').value.trim()
+        genero: genero,
+        fechaNacimiento: fechaNacimiento,
+        padre: padre,
+        madre: madre,
+        lugarNacimiento: lugarNacimiento,
+        comentarios: comentarios
     };
 
     let btn = document.getElementById('btnSubmit');
@@ -318,22 +353,30 @@ document.getElementById('registroForm').addEventListener('submit', async functio
         });
         let result = await response.json();
         
-        // Actualizamos nuestro contador interno con el ID devuelto por Google Sheets
         let match = result.id.match(/\d+/);
         if (match) {
             ultimoNumeroRegistrado = parseInt(match[0], 10);
         }
 
-        // Limpiar el formulario
         document.getElementById('registroForm').reset();
         
-        // Añadir los datos completos a la barra lateral para que la recepcionista los tenga a la vista
-        agregarAHistorialLateral(result.id, nombres + " " + apellidos, nacimiento);
+        // Objeto con todos los datos para pasarlos al botón "Ver"
+        let clienteObj = {
+            ID: result.id,
+            Nombres: nombres,
+            Apellidos: apellidos,
+            Genero: genero,
+            FechaNacimiento: fechaNacimiento,
+            Padre: padre,
+            Madre: madre,
+            LugarNacimiento: lugarNacimiento,
+            Comentarios: comentarios
+        };
 
-        // Preparamos el siguiente número en pantalla
+        agregarAHistorialLateral(clienteObj);
+
         actualizarSiguienteVisual();
 
-        // Restaurar botón principal
         btn.style.backgroundColor = "#16a34a";
         btn.innerText = `¡Guardado con éxito: ${result.id}!`;
         
@@ -352,26 +395,50 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     }
 });
 
-// Función para mostrar tanto el número como los datos resumidos en la barra lateral
-function agregarAHistorialLateral(turnoId, nombreCliente, fechaNac) {
+function agregarAHistorialLateral(cliente) {
     let lista = document.getElementById('sidebarLista');
     
     if (lista.innerHTML.includes("No hay registros")) {
         lista.innerHTML = "";
     }
 
+    let nombreCompleto = cliente.Nombres + " " + cliente.Apellidos;
+    let nacFormateada = cliente.FechaNacimiento ? cliente.FechaNacimiento : 'N/D';
+
     let card = document.createElement('div');
     card.className = 'sidebar-card';
     card.innerHTML = `
         <div class="sidebar-card-header">
-            <span class="s-id">${turnoId}</span>
-            <span class="s-badge">Registrado</span>
+            <span class="s-id">${cliente.ID}</span>
+            <button class="btn-ver-mini" onclick='abrirModal(${JSON.stringify(cliente)})'>👁️ Ver</button>
         </div>
-        <div class="s-nombre" title="${nombreCliente}">${nombreCliente}</div>
-        <div class="s-detalles">Nac: ${fechaNac}</div>
+        <div class="s-nombre" title="${nombreCompleto}">${nombreCompleto}</div>
+        <div class="s-detalles-row">
+            <span class="s-detalles">Nac: ${nacFormateada}</span>
+        </div>
     `;
 
     lista.prepend(card);
+}
+
+function abrirModal(cliente) {
+    document.getElementById('mId').innerText = cliente.ID;
+    document.getElementById('mNombre').innerText = cliente.Nombres + " " + cliente.Apellidos;
+    document.getElementById('mGenero').innerText = cliente.Genero || 'N/D';
+    document.getElementById('mNacimiento').innerText = cliente.FechaNacimiento ? cliente.FechaNacimiento : 'N/D';
+    document.getElementById('mPadre').innerText = cliente.Padre || 'No registrado';
+    document.getElementById('mMadre').innerText = cliente.Madre || 'No registrado';
+    document.getElementById('mLugar').innerText = cliente.LugarNacimiento || 'No registrado';
+    document.getElementById('mComentarios').innerText = cliente.Comentarios || 'Ninguno';
+    document.getElementById('modalDetalles').style.display = 'flex';
+}
+
+function cerrarModal() { 
+    document.getElementById('modalDetalles').style.display = 'none'; 
+}
+
+function cerrarModalAfuera(event) { 
+    if (event.target.id === 'modalDetalles') cerrarModal(); 
 }
 </script>
 
