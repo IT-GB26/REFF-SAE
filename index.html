@@ -154,7 +154,7 @@
 
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
-        <span class="proximo-turno-num" id="lblSiguienteTurno">A27</span>
+        <span class="proximo-turno-num" id="lblSiguienteTurno">A29</span>
     </div>
 
     <form id="registroForm">
@@ -196,21 +196,20 @@
 <script>
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
 
-// Inicializamos directamente en 27 para que el siguiente en emitirse sea el A27
+// Inicializamos en 29 para arrancar exactamente en el A29
 let contadorTurnoLocal = 29;
 
-// Si ya se guardó un avance previo en este navegador hoy, lo respetamos; de lo contrario arranca en 27
 let fechaHoy = new Date().toDateString();
 let fechaGuardada = localStorage.getItem("turno_fecha_actual") || "";
 
 if (fechaGuardada === fechaHoy) {
-    let ultimoGuardado = parseInt(localStorage.getItem("ultimo_turno_numero") || "26", 10);
-    if (!isNaN(ultimoGuardado) && ultimoGuardado >= 26) {
+    let ultimoGuardado = parseInt(localStorage.getItem("ultimo_turno_numero") || "28", 10);
+    if (!isNaN(ultimoGuardado) && ultimoGuardado >= 28) {
         contadorTurnoLocal = ultimoGuardado + 1;
     }
 } else {
     localStorage.setItem("turno_fecha_actual", fechaHoy);
-    localStorage.setItem("ultimo_turno_numero", "26");
+    localStorage.setItem("ultimo_turno_numero", "28");
 }
 
 function actualizarSiguienteVisual() {
