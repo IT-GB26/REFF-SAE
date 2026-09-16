@@ -58,7 +58,7 @@
 
 <div class="main-layout">
     <div class="ads-side" id="contenedorMultimedia">
-        <video id="videoPlaylist" autoplay playsinline></video>
+        <video id="videoPlaylist" autoplay playsinline muted></video>
     </div>
 
     <div class="center-stage">
@@ -99,26 +99,26 @@ const listaVideos = [
     "videos/anuncio5.mp4",
     "videos/anuncio1.mp4",
     "videos/anuncio6.mp4",
-    "videos/anuncio1.mp4",
-    
-
-    
+    "videos/anuncio1.mp4"
 ];
 let indiceVideoActual = 0;
 const contenedorMultimedia = document.getElementById('contenedorMultimedia');
 
 function iniciarReproductorVideos() {
-    contenedorMultimedia.innerHTML = `<video id="videoPlaylist" autoplay playsinline></video>`;
+    contenedorMultimedia.innerHTML = `<video id="videoPlaylist" autoplay playsinline muted></video>`;
     const elementoVideo = document.getElementById('videoPlaylist');
     
     if (listaVideos.length === 0) return;
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
     
-    elementoVideo.muted = false;
-    elementoVideo.play().catch(err => {
-        elementoVideo.muted = true;
-        elementoVideo.play();
+    // Forzar reproducción automática con truco de habilitación de audio inmediata
+    elementoVideo.play().then(() => {
+        setTimeout(() => {
+            elementoVideo.muted = false; // Quita el silencio de manera automática a los 150 milisegundos de haber iniciado
+        }, 150);
+    }).catch(err => {
+        console.log("Reproducción automática bloqueada por políticas estrictas del navegador", err);
     });
     
     elementoVideo.onended = () => {
@@ -128,13 +128,6 @@ function iniciarReproductorVideos() {
 }
 
 iniciarReproductorVideos();
-
-document.body.addEventListener('click', () => {
-    let elementoVideo = document.getElementById('videoPlaylist');
-    if (elementoVideo && elementoVideo.muted) {
-        elementoVideo.muted = false;
-    }
-}, { once: true });
 
 setInterval(() => {
     document.getElementById('reloj').innerText = new Date().toLocaleTimeString();
@@ -177,7 +170,7 @@ function procesarColaVoz() {
 
     let elementoVideo = document.getElementById('videoPlaylist');
     if (elementoVideo) {
-        elementoVideo.muted = true;
+        elementoVideo.muted = true; // Se silencia al llamar al cliente para dar paso a la voz
     }
 
     window.speechSynthesis.cancel();
@@ -198,7 +191,7 @@ function procesarColaVoz() {
 
     utterance.onend = () => {
         if (elementoVideo) {
-            elementoVideo.muted = false;
+            elementoVideo.muted = false; // Restaura el audio del video automáticamente al terminar el llamado
         }
         reproduciendoVozActiva = false;
         setTimeout(procesarColaVoz, 300);
@@ -246,11 +239,9 @@ async function sincronizarPantalla() {
         let llamados = datos.filter(row => row.Estado.toLowerCase() === "llamado");
         
         if (llamados.length > 0) {
-            // Ordenar para obtener el de llamado más reciente
             llamados.sort((a, b) => b.UltimoLlamado - a.UltimoLlamado);
             let actual = llamados[0];
 
-            // Validar estrictamente por el sello de tiempo exacto del último clic del botón
             if (actual.UltimoLlamado > ultimoTimestampProcesado) {
                 ultimoTimestampProcesado = actual.UltimoLlamado;
 
@@ -270,7 +261,6 @@ async function sincronizarPantalla() {
 
 window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 
-// Reducido a 1 segundo para máxima velocidad de respuesta sin saturar
 setInterval(sincronizarPantalla, 1000);
 sincronizarPantalla();
 </script>
