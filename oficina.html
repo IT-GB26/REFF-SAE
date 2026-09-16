@@ -357,13 +357,10 @@ function abrirModal(row) {
 function cerrarModal() { document.getElementById('modalDetalles').style.display = 'none'; }
 function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
 
-// LLAMADA Y RE-LLAMADA VELOZ SIN RETARDOS INNECESARIOS
 async function llamarCliente(id) {
     try {
         let urlLlamada = `${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${new Date().getTime()}`;
-        // Ejecución inmediata con no-cors para máxima velocidad de transmisión
         fetch(urlLlamada, { method: 'GET', mode: 'no-cors' });
-        // Actualizamos los datos instantáneamente en pantalla local
         setTimeout(cargarDatos, 100);
     } catch (e) { console.error("Error al llamar:", e); }
 }
