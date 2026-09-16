@@ -201,13 +201,13 @@ async function sincronizarSiguienteTurno() {
     try {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
         let datos = await res.json();
-        let hoyStr = new Date().toDateString();
+        let hoyStr = new Date().toLocaleDateString();
         let maxNum = 0;
 
         datos.forEach(row => {
             if (row.FechaHora) {
                 let d = new Date(row.FechaHora);
-                if (!isNaN(d.getTime()) && d.toDateString() === hoyStr) {
+                if (!isNaN(d.getTime()) && d.toLocaleDateString() === hoyStr) {
                     let match = String(row.ID).match(/\d+/);
                     if (match) {
                         let num = parseInt(match[0], 10);
