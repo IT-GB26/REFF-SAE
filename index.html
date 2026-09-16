@@ -154,7 +154,7 @@
 
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
-        <span class="proximo-turno-num" id="lblSiguienteTurno">A1</span>
+        <span class="proximo-turno-num" id="lblSiguienteTurno">Cargando...</span>
     </div>
 
     <form id="registroForm">
@@ -197,12 +197,13 @@
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
 let contadorTurnoLocal = 1;
 
-// Carga inicial rápida y ligera sin bloqueos
 async function inicializarContador() {
     try {
-        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime(), { mode: 'cors' });
+        // Usamos redirect: 'follow' para permitir que Google Apps Script devuelva los datos sin bloqueo
+        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime(), { redirect: 'follow' });
         let datos = await res.json();
         let hoyStr = new Date().toDateString();
+        
         if (datos && datos.length > 0) {
             let maxNum = 0;
             datos.forEach(row => {
@@ -220,7 +221,7 @@ async function inicializarContador() {
             if (maxNum > 0) contadorTurnoLocal = maxNum + 1;
         }
     } catch (e) {
-        console.log("Modo local activo");
+        console.log("Usando contador predeterminado", e);
     }
     actualizarSiguienteVisual();
 }
@@ -262,7 +263,6 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     btn.disabled = true;
 
     try {
-        // Envío asíncrono optimizado con no-cors para evitar bloqueos del navegador
         fetch(URL_WEB_APP, {
             method: 'POST',
             mode: 'no-cors',
