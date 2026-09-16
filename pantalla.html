@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pantalla Principal - Sala de Espera</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        header { background: #ffffff; height: 10vh; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        header img { max-height: 50px; }
+        header h1 { margin: 0; font-size: 24px; color: #1e293b; font-weight: 700; letter-spacing: 0.5px; }
+        
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        #reloj { font-size: 22px; font-weight: 600; color: #64748b; }
+
+        .main-layout { display: flex; height: 72vh; width: 100vw; }
+        
+        .ads-side { width: 25%; background: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 15px; border-right: 1px solid #e2e8f0; border-left: 1px solid #e2e8f0; position: relative; }
+        .ads-side video, .ads-side iframe, .ads-side img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+        .center-stage { width: 50%; background: #f8f9fa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; }
+        
+        .ticket-box { background: #ffffff; border: 2px solid #cbd5e1; border-radius: 24px; padding: 20px 10px; width: 95%; height: 92%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08); }
+        .label-turno { font-size: 22px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; font-weight: 700; letter-spacing: 2px; }
+        
+        .numero-cliente { 
+            font-size: 180px; 
+            font-weight: 900; 
+            color: #0f172a; 
+            line-height: 1; 
+            margin: 10px 0; 
+            transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+        .animar-llamado {
+            transform: scale(1.1);
+            color: #0284c7;
+        }
+
+        .ventanilla-asignada { font-size: 42px; color: #0284c7; font-weight: 800; margin-top: 15px; background: #e0f2fe; padding: 10px 30px; border-radius: 14px; display: inline-block; letter-spacing: 1px; }
+
+        .footer-espera { height: 18vh; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 30px; gap: 20px; box-shadow: -4px 6px -1px rgba(0,0,0,0.02); }
+        .espera-titulo { font-size: 16px; font-weight: 700; color: #64748b; text-transform: uppercase; min-width: 150px; border-right: 2px solid #e2e8f0; padding-right: 15px; }
+        .espera-lista { display: flex; gap: 15px; overflow-x: auto; width: 100%; padding: 5px 0; }
+        .turno-card { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 20px; text-align: center; min-width: 130px; flex-shrink: 0; }
+        .turno-card .t-id { font-size: 24px; font-weight: 800; color: #1e293b; }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="img/logo.png" alt="Logo">
+    <h1>SALA DE ESPERA</h1>
+    <div class="header-right">
+        <div id="reloj">00:00:00</div>
+    </div>
+</header>
+
+<div class="main-layout">
+    <div class="ads-side" id="contenedorMultimedia">
+        <video id="videoPlaylist" autoplay playsinline></video>
+    </div>
+
+    <div class="center-stage">
+        <div class="ticket-box">
+            <div class="label-turno">Turno Actual</div>
+            <div class="numero-cliente" id="lblNumero">---</div>
+            <div>
+                <span class="ventanilla-asignada" id="lblVentanilla">VENTANILLA --</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="ads-side">
+        <img src="img/publicidad1.jpg" alt="Publicidad">
+    </div>
+</div>
+
+<div class="footer-espera">
+    <div class="espera-titulo">Próximos Turnos</div>
+    <div class="espera-lista" id="contenedorProximos">
+        <div class="turno-card"><div class="t-id">--</div></div>
+    </div>
+</div>
+
+<script>
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
+let ultimoTimestampProcesado = 0;
+let colaTurnosVoz = [];
+let reproduciendoVozActiva = false;
+
+const listaVideos = [
+    "videos/anuncio1.mp4",
+    "videos/anuncio2.mp4",
+    "videos/anuncio3.mp4",
+    "videos/anuncio1.mp4",
+    "videos/anuncio4.mp4",
+    "videos/anuncio1.mp4",
+    "videos/anuncio5.mp4",
+    "videos/anuncio1.mp4",
+    "videos/anuncio6.mp4",
+    "videos/anuncio1.mp4",
+    "videos/anuncio7.mp4",
+
+    
+];
+let indiceVideoActual = 0;
+const contenedorMultimedia = document.getElementById('contenedorMultimedia');
+
+function iniciarReproductorVideos() {
+    contenedorMultimedia.innerHTML = `<video id="videoPlaylist" autoplay playsinline></video>`;
+    const elementoVideo = document.getElementById('videoPlaylist');
+    
+    if (listaVideos.length === 0) return;
+    elementoVideo.src = listaVideos[indiceVideoActual];
+    elementoVideo.load();
+    
+    elementoVideo.muted = false;
+    elementoVideo.play().catch(err => {
+        elementoVideo.muted = true;
+        elementoVideo.play();
+    });
+    
+    elementoVideo.onended = () => {
+        indiceVideoActual = (indiceVideoActual + 1) % listaVideos.length;
+        iniciarReproductorVideos();
+    };
+}
+
+iniciarReproductorVideos();
+
+document.body.addEventListener('click', () => {
+    let elementoVideo = document.getElementById('videoPlaylist');
+    if (elementoVideo && elementoVideo.muted) {
+        elementoVideo.muted = false;
+    }
+}, { once: true });
+
+setInterval(() => {
+    document.getElementById('reloj').innerText = new Date().toLocaleTimeString();
+}, 1000);
+
+function convertirNumeroALetras(numStr) {
+    let match = numStr.match(/\d+/);
+    if (!match) return numStr;
+    let num = parseInt(match[0], 10);
+
+    if (num === 100) return "cien";
+    if (num > 100 && num < 1000) {
+        let c = Math.floor(num / 100);
+        let resto = num % 100;
+        let centenasStr = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"][c];
+        if (resto === 0) return centenasStr;
+        return centenasStr + " " + convertirNumeroALetras(resto.toString());
+    }
+
+    const unidades = ["", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"];
+    const especiales = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve"];
+    const decenas = ["", "", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
+
+    if (num < 10) return unidades[num];
+    if (num >= 10 && num < 20) return especiales[num - 10];
+    if (num >= 20 && num < 30) return num === 20 ? "veinte" : "veinti" + unidades[num - 20];
+    if (num >= 30 && num < 100) {
+        let d = Math.floor(num / 10);
+        let u = num % 10;
+        return decenas[d] + (u > 0 ? " y " + unidades[u] : "");
+    }
+    return num.toString(); 
+}
+
+function procesarColaVoz() {
+    if (reproduciendoVozActiva || colaTurnosVoz.length === 0) return;
+    
+    reproduciendoVozActiva = true;
+    let item = colaTurnosVoz.shift();
+
+    let elementoVideo = document.getElementById('videoPlaylist');
+    if (elementoVideo) {
+        elementoVideo.muted = true;
+    }
+
+    window.speechSynthesis.cancel();
+
+    let letra = item.id.replace(/[0-9]/g, ''); 
+    let numLimpio = convertirNumeroALetras(item.id); 
+    let texto = `Número de cliente ${letra} ${numLimpio}, pasar a ventanilla ${item.ventanilla}.`;
+    
+    let utterance = new SpeechSynthesisUtterance(texto);
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.90;  
+    utterance.pitch = 1.0; 
+    utterance.volume = 1.0;
+
+    let voces = window.speechSynthesis.getVoices();
+    let vozSuave = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Helena')));
+    if (vozSuave) { utterance.voice = vozSuave; }
+
+    utterance.onend = () => {
+        if (elementoVideo) {
+            elementoVideo.muted = false;
+        }
+        reproduciendoVozActiva = false;
+        setTimeout(procesarColaVoz, 300);
+    };
+
+    utterance.onerror = () => {
+        if (elementoVideo) {
+            elementoVideo.muted = false;
+        }
+        reproduciendoVozActiva = false;
+        setTimeout(procesarColaVoz, 300);
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function activarAnimacionTurno() {
+    let elemento = document.getElementById('lblNumero');
+    elemento.classList.add('animar-llamado');
+    setTimeout(() => {
+        elemento.classList.remove('animar-llamado');
+    }, 2500);
+}
+
+async function sincronizarPantalla() {
+    try {
+        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
+        let datos = await res.json();
+        
+        let pendientes = datos.filter(row => row.Estado === "Pendiente");
+        let contenedorProximos = document.getElementById('contenedorProximos');
+        contenedorProximos.innerHTML = "";
+
+        if (pendientes.length === 0) {
+            contenedorProximos.innerHTML = `<div class="turno-card"><div class="t-id">--</div></div>`;
+        } else {
+            pendientes.slice(0, 8).forEach(p => {
+                let card = document.createElement('div');
+                card.className = 'turno-card';
+                card.innerHTML = `<div class="t-id">${p.ID}</div>`;
+                contenedorProximos.appendChild(card);
+            });
+        }
+
+        let llamados = datos.filter(row => row.Estado.toLowerCase() === "llamado");
+        
+        if (llamados.length > 0) {
+            // Ordenar para obtener el de llamado más reciente
+            llamados.sort((a, b) => b.UltimoLlamado - a.UltimoLlamado);
+            let actual = llamados[0];
+
+            // Validar estrictamente por el sello de tiempo exacto del último clic del botón
+            if (actual.UltimoLlamado > ultimoTimestampProcesado) {
+                ultimoTimestampProcesado = actual.UltimoLlamado;
+
+                document.getElementById('lblNumero').innerText = actual.ID;
+                document.getElementById('lblVentanilla').innerText = "VENTANILLA " + (actual.Ventanilla || "3");
+
+                activarAnimacionTurno();
+                
+                colaTurnosVoz.push({ id: actual.ID, ventanilla: actual.Ventanilla || "3" });
+                procesarColaVoz();
+            }
+        }
+    } catch (e) {
+        console.log("Sincronizando...", e);
+    }
+}
+
+window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+
+// Reducido a 1 segundo para máxima velocidad de respuesta sin saturar
+setInterval(sincronizarPantalla, 1000);
+sincronizarPantalla();
+</script>
+
+</body>
+</html>

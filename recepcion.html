@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recepción - Ingreso de Clientes</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); 
+            margin: 0; 
+            padding: 30px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .form-container { 
+            background: #ffffff; 
+            padding: 40px; 
+            border-radius: 20px; 
+            width: 100%;
+            max-width: 650px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
+        }
+        .logo-container { 
+            text-align: center; 
+            margin-bottom: 25px; 
+        }
+        .logo-container img { 
+            max-height: 70px; 
+            object-fit: contain;
+        }
+        h2 { 
+            text-align: center; 
+            color: #0f172a; 
+            margin-top: 0; 
+            font-weight: 800;
+            font-size: 24px;
+            letter-spacing: -0.5px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+        label { 
+            font-weight: 700; 
+            color: #334155; 
+            display: block; 
+            margin-top: 10px; 
+            font-size: 13px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 5px; 
+            border: 1.5px solid #cbd5e1; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 14px; 
+            background: #f8fafc;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0284c7;
+            background: #fff;
+        }
+        button { 
+            background: #0284c7; 
+            color: white; 
+            padding: 14px; 
+            border: none; 
+            width: 100%; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 20px;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+        }
+        button:hover { background: #0369a1; }
+        button:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <div class="logo-container">
+        <img src="img/logo.png" alt="Logo Empresa">
+    </div>
+    <h2>Registro de Nuevo Cliente</h2>
+    <form id="registroForm">
+        <div class="form-grid">
+            <div>
+                <label>Nombres:</label>
+                <input type="text" id="nombres" required autocomplete="off" autofocus>
+            </div>
+            <div>
+                <label>Apellidos:</label>
+                <input type="text" id="apellidos" required autocomplete="off">
+            </div>
+            <div>
+                <label>Género:</label>
+                <select id="genero">
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                </select>
+            </div>
+            <div>
+                <label>Fecha de Nacimiento:</label>
+                <input type="date" id="fechaNacimiento">
+            </div>
+            <div>
+                <label>Nombre del Padre:</label>
+                <input type="text" id="padre">
+            </div>
+            <div>
+                <label>Nombre de la Madre:</label>
+                <input type="text" id="madre">
+            </div>
+            <div class="full-width">
+                <label>Lugar de Nacimiento:</label>
+                <input type="text" id="lugarNacimiento">
+            </div>
+            <div class="full-width">
+                <label>Comentarios:</label>
+                <textarea id="comentarios" rows="2"></textarea>
+            </div>
+        </div>
+        
+        <button type="submit" id="btnSubmit">Guardar e Imprimir Turno</button>
+    </form>
+</div>
+
+<script>
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
+
+document.getElementById('registroForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    let datos = {
+        accion: "nuevo_registro",
+        nombres: document.getElementById('nombres').value.trim(),
+        apellidos: document.getElementById('apellidos').value.trim(),
+        genero: document.getElementById('genero').value,
+        fechaNacimiento: document.getElementById('fechaNacimiento').value,
+        padre: document.getElementById('padre').value.trim(),
+        madre: document.getElementById('madre').value.trim(),
+        lugarNacimiento: document.getElementById('lugarNacimiento').value.trim(),
+        comentarios: document.getElementById('comentarios').value.trim()
+    };
+
+    let btn = document.getElementById('btnSubmit');
+    btn.innerText = "Registrando rápido...";
+    btn.disabled = true;
+
+    try {
+        let response = await fetch(URL_WEB_APP, {
+            method: 'POST',
+            body: JSON.stringify(datos)
+        });
+        let result = await response.json();
+        
+        document.getElementById('registroForm').reset();
+        btn.style.backgroundColor = "#16a34a";
+        btn.innerText = `¡Éxito! Turno Asignado: ${result.id}`;
+        
+        setTimeout(() => {
+            btn.style.backgroundColor = "#0284c7";
+            btn.innerText = "Guardar e Imprimir Turno";
+            btn.disabled = false;
+            document.getElementById('nombres').focus();
+        }, 2000);
+
+    } catch (error) {
+        alert("Error al conectar con la base de datos.");
+        btn.style.backgroundColor = "#0284c7";
+        btn.innerText = "Guardar e Imprimir Turno";
+        btn.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>

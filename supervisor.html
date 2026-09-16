@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Jefatura - Supervisor de Sectores</title>
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #0284c7; --success: #16a34a; --warning: #ca8a04;
+            --bg: #f8fafc; --card-bg: #ffffff; --text: #334155; --border: #e2e8f0;
+        }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 30px; color: var(--text); }
+        .container { max-width: 1400px; margin: auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid var(--border); }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .header img { max-height: 50px; }
+        .header h2 { margin: 0; color: var(--primary); font-size: 22px; font-weight: 800; }
+        
+        .sector-selector { display: flex; gap: 10px; }
+        .sector-btn { background: #e2e8f0; color: var(--primary); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+        .sector-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(2,132,199,0.2); }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .kpi-card { background: var(--card-bg); padding: 20px 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); display: flex; flex-direction: column; }
+        .kpi-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 32px; font-weight: 900; color: var(--primary); margin-top: 8px; }
+
+        .toolbar { background: var(--card-bg); padding: 20px 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); margin-bottom: 25px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; }
+        .export-group, .message-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        input, select { padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; background: #f8fafc; }
+        .btn-action { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn-action:hover { background: #0369a1; }
+        .btn-export { background: var(--success); color: white; }
+        .btn-export:hover { background: #15803d; }
+        
+        .toast-msg { background: #dcfce7; color: #166534; padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: bold; display: none; }
+
+        .card-table { background: var(--card-bg); border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .table-header h3 { margin: 0; color: var(--primary); font-size: 18px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
+        .badge-pendiente { background: #fef9c3; color: #a16207; }
+        .badge-llamado { background: #e0f2fe; color: #0369a1; }
+        .badge-resuelto { background: #dcfce7; color: #166534; }
+        
+        button.view-btn { background: #0284c7; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
+        button.view-btn:hover { background: #0369a1; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .modal-content h3 { margin-top: 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .modal-content p { margin: 12px 0; font-size: 15px; color: #334155; line-height: 1.5; }
+        .close-modal { position: absolute; top: 15px; right: 20px; background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <img src="img/logo.png" alt="Logo Empresa">
+            <div>
+                <h2>Panel de Jefatura y Supervisión</h2>
+                <span style="font-size: 13px; color: #64748b;">Estadísticas y flujo exclusivo del día</span>
+            </div>
+        </div>
+        <div class="sector-selector">
+            <button class="sector-btn active" id="btnSector1" onclick="cambiarSector('sector1')">El Congo </button>
+            <button class="sector-btn" id="btnSector2" onclick="cambiarSector('sector2')">Coatepeque</button>
+        </div>
+    </div>
+
+    <!-- KPIs exclusivos de HOY -->
+    <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-title">Atendidos Hoy</div><div class="kpi-value" id="kpiAtendidos">0</div></div>
+        <div class="kpi-card"><div class="kpi-title">En Cola / Pendientes Hoy</div><div class="kpi-value" id="kpiPendientes" style="color: var(--warning);">0</div></div>
+        <div class="kpi-card"><div class="kpi-title">En Llamado Actual Hoy</div><div class="kpi-value" id="kpiLlamados" style="color: var(--accent);">0</div></div>
+    </div>
+
+    <!-- Herramientas de Jefatura -->
+    <div class="toolbar">
+        <div class="export-group">
+            <span style="font-weight: 700; font-size: 13px;">Descargar Histórico:</span>
+            <select id="selectPeriodoExport">
+                <option value="mes">Mes Actual (Mensual)</option>
+                <option value="trimestre">Últimos 3 Meses (Trimestral)</option>
+                <option value="todo">Histórico Completo</option>
+            </select>
+            <button class="btn-action btn-export" onclick="exportarBaseDatos()">📥 Descargar Excel/CSV</button>
+        </div>
+        <div class="message-group">
+            <select id="selectVentanillaDestino">
+                <option value="1">Ventanilla 1</option><option value="2">Ventanilla 2</option>
+                <option value="3">Ventanilla 3</option><option value="4">Ventanilla 4</option>
+            </select>
+            <input type="text" id="inputMensajeJefatura" placeholder="Enviar mensaje a agente...">
+            <button class="btn-action" onclick="enviarMensajeSupervisor()">Enviar Aviso</button>
+            <span class="toast-msg" id="toastExito">¡Enviado! ✓</span>
+        </div>
+    </div>
+
+    <div class="card-table">
+        <div class="table-header">
+            <h3 id="tituloTabla">Flujo Diario - Sector 1</h3>
+            <span style="font-size: 13px; color: #64748b;">🔄 Actualización automática de hoy</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Turno ID</th><th>Hora / Fecha</th><th>Cliente</th><th>Estado</th><th>Detalles / Ver Más</th><th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody id="tablaSupervisor">
+                <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 30px;">Cargando datos del día...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para ver detalles -->
+<div class="modal-overlay" id="modalDetalles" onclick="cerrarModalAfuera(event)">
+    <div class="modal-content">
+        <button class="close-modal" onclick="cerrarModal()">X</button>
+        <h3>Detalles del Turno <span id="mId"></span></h3>
+        <p><strong>Cliente:</strong> <span id="mNombre"></span></p>
+        <p><strong>Género:</strong> <span id="mGenero"></span></p>
+        <p><strong>Fecha de Nacimiento:</strong> <span id="mNacimiento"></span></p>
+        <p><strong>Padre:</strong> <span id="mPadre"></span></p>
+        <p><strong>Madre:</strong> <span id="mMadre"></span></p>
+        <p><strong>Lugar de Nacimiento:</strong> <span id="mLugar"></span></p>
+        <p><strong>Comentarios:</strong> <span id="mComentarios"></span></p>
+        <p><strong>Estado:</strong> <span id="mEstado"></span></p>
+        <p><strong>Atendido por:</strong> <span id="mAtendido"></span></p>
+    </div>
+</div>
+
+<script>
+const URLS_SECTORES = {
+    sector1: "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec",
+    sector2: "https://script.google.com/macros/s/URL_DEL_SECTOR_2/exec"
+};
+
+let sectorActivo = 'sector1';
+let datosGlobalesSector = [];
+
+function cambiarSector(sector) {
+    sectorActivo = sector;
+    document.getElementById('btnSector1').className = sector === 'sector1' ? 'sector-btn active' : 'sector-btn';
+    document.getElementById('btnSector2').className = sector === 'sector2' ? 'sector-btn active' : 'sector-btn';
+    document.getElementById('tituloTabla').innerText = "Flujo Diario - " + (sector === 'sector1' ? 'Sector 1' : 'Sector 2');
+    cargarDatosSupervisor();
+}
+
+async function cargarDatosSupervisor() {
+    let urlActiva = URLS_SECTORES[sectorActivo];
+    if (!urlActiva || urlActiva.includes("URL_DEL_")) {
+        document.getElementById('tablaSupervisor').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ef4444; padding: 30px;">Configure la URL de la Web App para ${sectorActivo} en el código.</td></tr>`;
+        return;
+    }
+    try {
+        let res = await fetch(urlActiva + "?t=" + new Date().getTime());
+        datosGlobalesSector = await res.json();
+        
+        // Filtrar exclusivamente los registros de HOY para las estadísticas y la tabla diaria
+        let hoyStr = new Date().toDateString();
+        let datosHoy = datosGlobalesSector.filter(row => {
+            if (!row.FechaHora) return false;
+            let d = new Date(row.FechaHora);
+            return !isNaN(d.getTime()) && d.toDateString() === hoyStr;
+        });
+
+        renderizarSupervisor(datosHoy);
+    } catch (e) { console.error("Error al obtener datos:", e); }
+}
+
+function renderizarSupervisor(datosHoy) {
+    let tbody = document.getElementById('tablaSupervisor');
+    tbody.innerHTML = "";
+
+    let totalAtendidos = datosHoy.filter(d => d.Estado === "Resuelto").length;
+    let totalPendientes = datosHoy.filter(d => d.Estado === "Pendiente").length;
+    let totalLlamados = datosHoy.filter(d => d.Estado === "Llamado").length;
+
+    document.getElementById('kpiAtendidos').innerText = totalAtendidos;
+    document.getElementById('kpiPendientes').innerText = totalPendientes;
+    document.getElementById('kpiLlamados').innerText = totalLlamados;
+
+    if (datosHoy.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b; padding: 30px;">No hay registros de atenciones para el día de hoy.</td></tr>`;
+        return;
+    }
+
+    [...datosHoy].reverse().forEach(row => {
+        let tr = document.createElement('tr');
+        let badgeClass = 'badge-pendiente';
+        if (row.Estado === 'Llamado') badgeClass = 'badge-llamado';
+        if (row.Estado === 'Resuelto') badgeClass = 'badge-resuelto';
+
+        let horaLimpia = '';
+        try {
+            let d = new Date(row.FechaHora);
+            horaLimpia = !isNaN(d.getTime()) ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : row.FechaHora;
+        } catch(e) { horaLimpia = row.FechaHora; }
+
+        let responsable = row.AtendidoPor ? `<b>${row.AtendidoPor}</b>` : (row.Estado === 'Llamado' ? `Ventanilla ${row.Ventanilla}` : 'Pendiente');
+
+        tr.innerHTML = `
+            <td><b style="color: var(--accent);">${row.ID}</b></td>
+            <td style="color: #64748b; font-size: 13px;">${horaLimpia}</td>
+            <td><b>${row.Nombres} ${row.Apellidos}</b></td>
+            <td><span class="badge ${badgeClass}">${row.Estado}</span></td>
+            <td><button class="view-btn" onclick='abrirModal(${JSON.stringify(row)})'>👁️ Ver</button></td>
+            <td>${responsable}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirModal(row) {
+    document.getElementById('mId').innerText = row.ID;
+    document.getElementById('mNombre').innerText = row.Nombres + " " + row.Apellidos;
+    document.getElementById('mGenero').innerText = row.Genero || 'N/D';
+    document.getElementById('mNacimiento').innerText = row.FechaNacimiento ? row.FechaNacimiento.substring(0,10) : 'N/D';
+    document.getElementById('mPadre').innerText = row.Padre || 'No registrado';
+    document.getElementById('mMadre').innerText = row.Madre || 'No registrado';
+    document.getElementById('mLugar').innerText = row.LugarNacimiento || 'No registrado';
+    document.getElementById('mComentarios').innerText = row.Comentarios || 'Ninguno';
+    document.getElementById('mEstado').innerText = row.Estado;
+    document.getElementById('mAtendido').innerText = row.AtendidoPor || 'Pendiente';
+    document.getElementById('modalDetalles').style.display = 'flex';
+}
+
+function cerrarModal() { document.getElementById('modalDetalles').style.display = 'none'; }
+function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
+
+function exportarBaseDatos() {
+    if (!datosGlobalesSector || datosGlobalesSector.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+    }
+
+    let periodo = document.getElementById('selectPeriodoExport').value;
+    let ahora = new Date();
+    
+    let filtrados = datosGlobalesSector.filter(row => {
+        if (!row.FechaHora) return false;
+        let fechaFila = new Date(row.FechaHora);
+        if (isNaN(fechaFila.getTime())) return false;
+
+        if (periodo === 'mes') {
+            return fechaFila.getMonth() === ahora.getMonth() && fechaFila.getFullYear() === ahora.getFullYear();
+        } else if (periodo === 'trimestre') {
+            let diferenciaMeses = (ahora.getFullYear() - fechaFila.getFullYear()) * 12 + (ahora.getMonth() - fechaFila.getMonth());
+            return diferenciaMeses >= 0 && diferenciaMeses <= 2;
+        }
+        return true;
+    });
+
+    if (filtrados.length === 0) {
+        alert("No se encontraron registros para el periodo seleccionado.");
+        return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,ID,Fecha/Hora,Nombres,Apellidos,Genero,Fecha Nacimiento,Padre,Madre,Lugar Nacimiento,Comentarios,Estado,Ventanilla,Atendido Por\r\n";
+    
+    filtrados.forEach(row => {
+        let fila = [
+            row.ID, row.FechaHora, `"${row.Nombres}"`, `"${row.Apellidos}"`, 
+            row.Genero, row.FechaNacimiento, `"${row.Padre || ''}"`, `"${row.Madre || ''}"`, 
+            `"${row.LugarNacimiento || ''}"`, `"${row.Comentarios || ''}"`, 
+            row.Estado, row.Ventanilla, `"${row.AtendidoPor || ''}"`
+        ];
+        csvContent += fila.join(",") + "\r\n";
+    });
+
+    let encodedUri = encodeURI(csvContent);
+    let link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Reporte_Atenciones_${sectorActivo}_${periodo}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+async function enviarMensajeSupervisor() {
+    let ventanilla = document.getElementById('selectVentanillaDestino').value;
+    let mensaje = document.getElementById('inputMensajeJefatura').value.trim();
+    if (!mensaje) { alert("Escriba un mensaje."); return; }
+
+    let urlActiva = URLS_SECTORES[sectorActivo];
+    try {
+        await fetch(urlActiva, {
+            method: 'POST',
+            body: JSON.stringify({ accion: "enviar_mensaje", ventanilla: ventanilla, mensaje: mensaje })
+        });
+        
+        let toast = document.getElementById('toastExito');
+        toast.style.display = 'inline-block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+
+        document.getElementById('inputMensajeJefatura').value = "";
+    } catch(e) { alert("Error al enviar aviso."); }
+}
+
+setInterval(cargarDatosSupervisor, 3000);
+cargarDatosSupervisor();
+</script>
+</body>
+</html>
