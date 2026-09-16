@@ -104,21 +104,21 @@ const listaVideos = [
     "videos/anuncio3.mp4"
 ];
 let indiceVideoActual = 0;
-const contenedorMultimedia = document.getElementById('contenedorMultimedia');
 
 function iniciarSistemaPantalla() {
     document.getElementById('audioOverlay').style.display = 'none';
     let dummyUtterance = new SpeechSynthesisUtterance("");
     window.speechSynthesis.speak(dummyUtterance);
     iniciarReproductorVideos();
-    setInterval(sincronizarPantalla, 1200); //[cite: 3]
+    setInterval(sincronizarPantalla, 1000);[cite: 3]
 }
 
 function iniciarReproductorVideos() {
     let elementoVideo = document.getElementById('videoPlaylist');
     if (!elementoVideo) return;
     
-    elementoVideo.volume = 0.35; 
+    // Volumen estandarizado base del video en 30%
+    elementoVideo.volume = 0.30; 
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
     elementoVideo.play().catch(err => console.log("Reproducción automática pendiente", err));
@@ -169,7 +169,10 @@ function procesarColaVoz() {
     let item = colaTurnosVoz.shift();
 
     let elementoVideo = document.getElementById('videoPlaylist');
-    if (elementoVideo) elementoVideo.muted = true; //[cite: 3]
+    if (elementoVideo) {
+        // Bajamos el volumen del video al 5% para que la voz sintetizada resalte perfectamente sin apagar el video
+        elementoVideo.volume = 0.05; 
+    }
 
     window.speechSynthesis.cancel();
 
@@ -181,20 +184,25 @@ function procesarColaVoz() {
     utterance.lang = 'es-ES';
     utterance.rate = 0.90;  
     utterance.pitch = 1.0; 
-    utterance.volume = 1.0;
+    utterance.volume = 1.0; // Voz clara al máximo
 
     let voces = window.speechSynthesis.getVoices();
     let vozSuave = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Helena')));
     if (vozSuave) { utterance.voice = vozSuave; }
 
     utterance.onend = () => {
-        if (elementoVideo) elementoVideo.muted = false; //[cite: 3]
+        if (elementoVideo) {
+            // Restauramos el volumen estandarizado del video
+            elementoVideo.volume = 0.30; 
+        }
         reproduciendoVozActiva = false;
         setTimeout(procesarColaVoz, 200);
     };
 
     utterance.onerror = () => {
-        if (elementoVideo) elementoVideo.muted = false; //[cite: 3]
+        if (elementoVideo) {
+            elementoVideo.volume = 0.30;
+        }
         reproduciendoVozActiva = false;
         setTimeout(procesarColaVoz, 200);
     };
