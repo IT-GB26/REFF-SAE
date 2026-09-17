@@ -19,23 +19,10 @@
         .login-card button:hover { background: #0369a1; }
 
         .popup-alerta {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            background: #ffffff;
-            border-left: 6px solid #f59e0b;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            padding: 20px 25px;
-            border-radius: 12px;
-            z-index: 9999;
-            max-width: 380px;
-            display: none;
-            animation: slideIn 0.3s ease-out forwards;
+            position: fixed; top: 25px; right: 25px; background: #ffffff; border-left: 6px solid #f59e0b;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 20px 25px; border-radius: 12px; z-index: 9999; max-width: 380px; display: none; animation: slideIn 0.3s ease-out forwards;
         }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .popup-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .popup-title { font-weight: 800; color: #b45309; font-size: 15px; display: flex; align-items: center; gap: 6px; }
         .popup-body { font-size: 14px; color: #334155; line-height: 1.4; margin-bottom: 12px; }
@@ -56,7 +43,6 @@
         
         .cliente-info { font-size: 16px; font-weight: 700; color: #0f172a; }
         .cliente-sub { font-size: 13px; color: #64748b; margin-top: 3px; }
-        
         .detalles-resumen { font-size: 14px; color: #475569; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #0284c7; }
         
         .btn-accion-group { display: flex; flex-direction: column; gap: 6px; align-items: center; }
@@ -84,9 +70,7 @@
         <button onclick="cerrarPopup()" style="background:none; border:none; color:#64748b; font-weight:bold; cursor:pointer; font-size:16px;">&times;</button>
     </div>
     <div class="popup-body" id="textoPopupMensaje"></div>
-    <div class="popup-timer">
-        <div class="popup-timer-bar" id="popupTimerBar"></div>
-    </div>
+    <div class="popup-timer"><div class="popup-timer-bar" id="popupTimerBar"></div></div>
 </div>
 
 <div id="loginOverlay">
@@ -149,7 +133,7 @@
 </div>
 
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwsXRt9m2AbYErtmOO8ZXNmxbkhVLIuYW61hD242R2VGI6Ac87-JxWH5SJOwlA929VN/exec";
 let vistaActual = 'pendientes';
 let datosCache = [];
 let localOverrides = {}; 
@@ -158,6 +142,7 @@ let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
 let ultimoTimestampAviso = Date.now();
 let temporizadorCierrePopup = null;
 let ultimoMovimiento = Date.now();
+let peticionEnCurso = false;
 
 window.onload = function() {
     if (usuarioActual) {
@@ -166,7 +151,7 @@ window.onload = function() {
         document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
         inicializarUltimoAviso();
         cargarDatos();
-        setInterval(verificarMensajesSupervisor, 3000);
+        setInterval(verificarMensajesSupervisor, 3500);
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
@@ -217,7 +202,7 @@ function guardarUsuario() {
     
     inicializarUltimoAviso();
     cargarDatos();
-    setInterval(verificarMensajesSupervisor, 3000);
+    setInterval(verificarMensajesSupervisor, 3500);
 }
 
 function cambiarUsuario() {
@@ -271,14 +256,15 @@ function cerrarPopup() {
 }
 
 async function cargarDatos() {
-    if (!usuarioActual) return;
+    if (!usuarioActual || peticionEnCurso) return;
+    peticionEnCurso = true;
     try {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
         let serverData = await res.json();
         
         datosCache = serverData.map(row => {
             if (localOverrides[row.ID]) {
-                if (Date.now() - localOverrides[row.ID].timestamp < 15000) {
+                if (Date.now() - localOverrides[row.ID].timestamp < 30000) {
                     return { ...row, ...localOverrides[row.ID] };
                 } else {
                     delete localOverrides[row.ID];
@@ -288,7 +274,11 @@ async function cargarDatos() {
         });
 
         renderizarTabla();
-    } catch (e) { console.error("Error al obtener datos:", e); }
+    } catch (e) { 
+        console.error("Error al obtener datos:", e); 
+    } finally {
+        peticionEnCurso = false;
+    }
 }
 
 function cambiarVista(vista) {
@@ -317,13 +307,23 @@ function renderizarTabla() {
 
     let filtrados = [];
     if (vistaActual === 'pendientes') {
-        filtrados = datosCache.filter(row => row.Estado === "Pendiente" || row.Estado === "Llamado");
+        filtrados = datosCache.filter(row => {
+            if (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto") return false;
+            if (row.Estado === "Resuelto") return false;
+            
+            if (row.Estado !== "Pendiente" && row.Estado !== "Llamado") return false;
+            if (!row.FechaHora) return true;
+            let d = new Date(row.FechaHora);
+            let fechaFila = !isNaN(d.getTime()) ? d.toLocaleDateString() : row.FechaHora;
+            return fechaFila === hoyStr;
+        });
     } else {
         filtrados = datosCache.filter(row => {
             if (!row.FechaHora) return false;
             let d = new Date(row.FechaHora);
             let fechaFila = !isNaN(d.getTime()) ? d.toLocaleDateString() : row.FechaHora;
-            return fechaFila !== hoyStr || row.Estado === "Resuelto";
+            let esResueltoLocal = (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto");
+            return fechaFila !== hoyStr || row.Estado === "Resuelto" || esResueltoLocal;
         });
     }
 
@@ -417,7 +417,7 @@ function marcarResuelto(id) {
     let override = {
         Estado: "Resuelto",
         AtendidoPor: atendidoTexto,
-        timestamp: Date.now() + 15000
+        timestamp: Date.now() + 30000
     };
     localOverrides[id] = override;
 
@@ -436,7 +436,7 @@ function marcarResuelto(id) {
     }
 }
 
-setInterval(cargarDatos, 2000);
+setInterval(cargarDatos, 3500);
 </script>
 </body>
 </html>
