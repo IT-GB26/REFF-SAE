@@ -74,10 +74,9 @@
 </div>
 
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbzvDBG4WC_M_TmYxCmIKblX24VxNb1Fx_7D7nJJP1DyEyVJDxkuh312FVtPeAUSNAQ2/exec";
+const URL_WEB_APP = "AQUI_PEGA_TU_URL_DE_WEB_APP";
 let vistaActual = 'pendientes';
 let datosCache = [];
-let localOverrides = {}; 
 let usuarioActual = localStorage.getItem("agente_nombre_fijo") || "";
 let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
 let peticionEnCurso = false;
@@ -88,7 +87,7 @@ window.onload = function() {
         document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
         document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
         cargarDatos();
-        setInterval(cargarDatos, 4000); // Sincronización fluida cada 4 segundos
+        setInterval(cargarDatos, 4000);
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
@@ -119,18 +118,7 @@ async function cargarDatos() {
     peticionEnCurso = true;
     try {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
-        let serverData = await res.json();
-        
-        datosCache = serverData.map(row => {
-            if (localOverrides[row.ID]) {
-                if (Date.now() - localOverrides[row.ID].timestamp < 30000) {
-                    return { ...row, ...localOverrides[row.ID] };
-                } else {
-                    delete localOverrides[row.ID];
-                }
-            }
-            return row;
-        });
+        datosCache = await res.json();
         renderizarTabla();
     } catch (e) {
     } finally {
@@ -149,18 +137,13 @@ function cambiarVista(vista) {
 function renderizarTabla() {
     let tbody = document.getElementById('tablaCola');
     tbody.innerHTML = "";
-    let hoyStr = new Date().toLocaleDateString();
 
     let filtrados = datosCache.filter(row => {
-        let esResueltoLocal = (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto");
         let esResueltoServidor = (String(row.Estado).trim().toLowerCase() === "resuelto");
-        
         if (vistaActual === 'pendientes') {
-            if (esResueltoLocal || esResueltoServidor) return false;
-            let est = String(row.Estado).trim();
-            return est === "Pendiente" || est === "Llamado";
+            return !esResueltoServidor && (row.Estado === "Pendiente" || row.Estado === "Llamado");
         } else {
-            return esResueltoServidor || esResueltoLocal;
+            return esResueltoServidor;
         }
     });
 
@@ -200,30 +183,34 @@ function renderizarTabla() {
     });
 }
 
-function llamarCliente(id) {
-    let override = { Estado: "Llamado", Ventanilla: ventanillaFija, UltimoLlamado: Date.now(), timestamp: Date.now() };
-    localOverrides[id] = override;
-    let index = datosCache.findIndex(r => r.ID === id);
-    if (index !== -1) { datosCache[index] = { ...datosCache[index], ...override }; renderizarTabla(); }
-
-    fetch(`${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${Date.now()}`)
-        .then(() => cargarDatos());
+async function llamarCliente(id) {
+    try {
+        await fetch(`${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${Date.now()}`);
+        await cargarDatos();
+    } catch(e) {
+        alert("Error al llamar al cliente.");
+    }
 }
 
-function marcarResuelto(id) {
+async function marcarResuelto(id) {
     let btn = document.getElementById(`btnResuelto_${id}`);
     if (btn) { btn.innerText = "Guardando..."; btn.disabled = true; }
     
     let atendidoTexto = usuarioActual + " (V." + ventanillaFija + ")";
-    let override = { Estado: "Resuelto", AtendidoPor: atendidoTexto, timestamp: Date.now() + 30000 };
-    localOverrides[id] = override;
     
-    let index = datosCache.findIndex(r => r.ID === id);
-    if (index !== -1) { datosCache[index] = { ...datosCache[index], ...override }; renderizarTabla(); }
-
-    fetch(`${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${Date.now()}`)
-        .then(() => cargarDatos())
-        .catch(() => { if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; } });
+    try {
+        let res = await fetch(`${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${Date.now()}`);
+        let data = await res.json();
+        if (data.status === "ok") {
+            await cargarDatos();
+        } else {
+            alert("No se pudo actualizar el registro en el servidor.");
+            if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
+        }
+    } catch (e) {
+        alert("Error de conexión al marcar como resuelto.");
+        if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
+    }
 }
 </script>
 </body>
