@@ -189,7 +189,11 @@ function procesarColaVoz() {
     let item = colaTurnosVoz.shift();
 
     let elementoVideo = document.getElementById('videoPlaylist');
-    if (elementoVideo) { elementoVideo.volume = 0.05; }
+    
+    // 1. Silenciamos el video por completo 1 segundo antes de hablar
+    if (elementoVideo) { 
+        elementoVideo.volume = 0.0; 
+    }
 
     window.speechSynthesis.cancel();
 
@@ -208,15 +212,24 @@ function procesarColaVoz() {
     if (vozSuave) { utterance.voice = vozSuave; }
 
     utterance.onend = () => {
-        if (elementoVideo) { elementoVideo.volume = 0.30; }
-        reproduciendoVozActiva = false;
-        setTimeout(procesarColaVoz, 200);
+        // 2. Al terminar la voz, esperamos 2 segundos adicionales en silencio antes de restaurar el volumen del video
+        setTimeout(() => {
+            if (elementoVideo) { 
+                elementoVideo.volume = 0.30; 
+            }
+            reproduciendoVozActiva = false;
+            setTimeout(procesarColaVoz, 200);
+        }, 2000);
     };
 
     utterance.onerror = () => {
-        if (elementoVideo) { elementoVideo.volume = 0.30; }
-        reproduciendoVozActiva = false;
-        setTimeout(procesarColaVoz, 200);
+        setTimeout(() => {
+            if (elementoVideo) { 
+                elementoVideo.volume = 0.30; 
+            }
+            reproduciendoVozActiva = false;
+            setTimeout(procesarColaVoz, 200);
+        }, 2000);
     };
 
     window.speechSynthesis.speak(utterance);
