@@ -152,6 +152,7 @@
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
 let vistaActual = 'pendientes';
 let datosCache = [];
+let localOverrides = {}; // Control anti-rebote para acciones locales instantáneas
 let usuarioActual = localStorage.getItem("agente_nombre_fijo") || "";
 let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
 let ultimoTimestampAviso = Date.now();
@@ -272,7 +273,20 @@ async function cargarDatos() {
     if (!usuarioActual) return;
     try {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
-        datosCache = await res.json();
+        let serverData = await res.json();
+        
+        // Protege los cambios locales recientes para evitar el efecto rebote con el servidor
+        datosCache = serverData.map(row => {
+            if (localOverrides[row.ID]) {
+                if (Date.now() - localOverrides[row.ID].timestamp < 15000) {
+                    return { ...row, ...localOverrides[row.ID] };
+                } else {
+                    delete localOverrides[row.ID];
+                }
+            }
+            return row;
+        });
+
         renderizarTabla();
     } catch (e) { console.error("Error al obtener datos:", e); }
 }
@@ -377,11 +391,17 @@ function cerrarModal() { document.getElementById('modalDetalles').style.display 
 function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
 
 function llamarCliente(id) {
+    let override = {
+        Estado: "Llamado",
+        Ventanilla: ventanillaFija,
+        UltimoLlamado: Date.now(),
+        timestamp: Date.now()
+    };
+    localOverrides[id] = override;
+
     let index = datosCache.findIndex(r => r.ID === id);
     if (index !== -1) {
-        datosCache[index].Estado = "Llamado";
-        datosCache[index].Ventanilla = ventanillaFija;
-        datosCache[index].UltimoLlamado = Date.now();
+        datosCache[index] = { ...datosCache[index], ...override };
         renderizarTabla();
     }
 
@@ -393,15 +413,22 @@ async function marcarResuelto(id) {
     let btn = document.getElementById(`btnResuelto_${id}`);
     if (btn) { btn.innerText = "Guardando..."; btn.disabled = true; }
     
+    let atendidoTexto = usuarioActual + " (V." + ventanillaFija + ")";
+    let override = {
+        Estado: "Resuelto",
+        AtendidoPor: atendidoTexto,
+        timestamp: Date.now()
+    };
+    localOverrides[id] = override;
+
     let index = datosCache.findIndex(r => r.ID === id);
     if (index !== -1) {
-        datosCache[index].Estado = "Resuelto";
-        datosCache[index].AtendidoPor = usuarioActual + " (V." + ventanillaFija + ")";
+        datosCache[index] = { ...datosCache[index], ...override };
         renderizarTabla();
     }
 
     try {
-        let urlResuelto = `${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(usuarioActual + " (V." + ventanillaFija + ")")}&t=${new Date().getTime()}`;
+        let urlResuelto = `${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${new Date().getTime()}`;
         fetch(urlResuelto, { method: 'GET', mode: 'no-cors' });
     } catch (e) {
         alert("Error al marcar como resuelto.");
