@@ -4,74 +4,33 @@
     <meta charset="UTF-8">
     <title>Panel de Oficinas - Control de Turnos</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
         .header img { max-height: 55px; }
-        .ventanilla-box { background: #e0f2fe; color: #0369a1; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; border: 1px solid #bae6fd; }
-        
+        .ventanilla-box { background: #e0f2fe; color: #0369a1; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; }
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .login-card { background: white; padding: 40px; border-radius: 16px; width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-card h2 { margin-top: 0; color: #1e293b; font-size: 22px; }
-        .login-card p { color: #64748b; font-size: 14px; margin-bottom: 20px; }
         .login-card input, .login-card select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
         .login-card button { background: #0284c7; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .login-card button:hover { background: #0369a1; }
-
-        .popup-alerta {
-            position: fixed; top: 25px; right: 25px; background: #ffffff; border-left: 6px solid #f59e0b;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 20px 25px; border-radius: 12px; z-index: 9999; max-width: 380px; display: none; animation: slideIn 0.3s ease-out forwards;
-        }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .popup-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .popup-title { font-weight: 800; color: #b45309; font-size: 15px; display: flex; align-items: center; gap: 6px; }
-        .popup-body { font-size: 14px; color: #334155; line-height: 1.4; margin-bottom: 12px; }
-        .popup-timer { height: 4px; background: #fef3c7; border-radius: 2px; overflow: hidden; }
-        .popup-timer-bar { height: 100%; background: #f59e0b; width: 100%; transition: width 15s linear; }
-
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
-        .tab-btn { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .tab-btn { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .tab-btn.active { background: #0284c7; }
-        .refresh-btn { background: #0d9488; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
-        .refresh-btn:hover { background: #0f766e; }
+        .refresh-btn { background: #0d9488; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .user-tag { margin-left: auto; font-size: 14px; color: #475569; background: #f1f5f9; padding: 8px 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px; }
-        .user-tag button { background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; font-weight: bold; padding: 0; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 16px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
         th { background-color: #f8fafc; color: #475569; font-weight: 700; font-size: 14px; text-transform: uppercase; }
-        
         .cliente-info { font-size: 16px; font-weight: 700; color: #0f172a; }
         .cliente-sub { font-size: 13px; color: #64748b; margin-top: 3px; }
         .detalles-resumen { font-size: 14px; color: #475569; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #0284c7; }
-        
         .btn-accion-group { display: flex; flex-direction: column; gap: 6px; align-items: center; }
-        button.action-btn { background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; width: 110px; }
-        button.action-btn:hover { background: #15803d; }
-        button.called-btn { background: #ca8a04; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; width: 110px; }
-        button.called-btn:hover { background: #a16207; }
-        button.resolved-btn { background: #475569; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; width: 110px; }
-        button.resolved-btn:hover { background: #334155; }
-        button.view-btn { background: #0284c7; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; }
-        button.view-btn:hover { background: #0369a1; }
-
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
-        .modal-content h3 { margin-top: 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .modal-content p { margin: 12px 0; font-size: 15px; color: #334155; line-height: 1.5; }
-        .close-modal { position: absolute; top: 15px; right: 20px; background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button.action-btn { background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
+        button.called-btn { background: #ca8a04; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
+        button.resolved-btn { background: #475569; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
     </style>
 </head>
 <body>
-
-<div class="popup-alerta" id="popupAlerta">
-    <div class="popup-header">
-        <div class="popup-title">⚠️ Aviso de Jefatura</div>
-        <button onclick="cerrarPopup()" style="background:none; border:none; color:#64748b; font-weight:bold; cursor:pointer; font-size:16px;">&times;</button>
-    </div>
-    <div class="popup-body" id="textoPopupMensaje"></div>
-    <div class="popup-timer"><div class="popup-timer-bar" id="popupTimerBar"></div></div>
-</div>
 
 <div id="loginOverlay">
     <div class="login-card">
@@ -79,10 +38,8 @@
         <p>Ingrese su nombre y asigne la ventanilla fija para esta PC.</p>
         <input type="text" id="inputUsuario" placeholder="Ej: Lic. Carlos Pérez" autofocus>
         <select id="selectVentanillaLogin">
-            <option value="1">Ventanilla 1</option>
-            <option value="2">Ventanilla 2</option>
-            <option value="3" selected>Ventanilla 3</option>
-            <option value="4">Ventanilla 4</option>
+            <option value="1">Ventanilla 1</option><option value="2">Ventanilla 2</option>
+            <option value="3" selected>Ventanilla 3</option><option value="4">Ventanilla 4</option>
         </select>
         <button onclick="guardarUsuario()">Ingresar al Panel</button>
     </div>
@@ -97,9 +54,9 @@
 
     <div class="tabs">
         <button class="tab-btn active" id="btnPendientes" onclick="cambiarVista('pendientes')">Cola Activa (Hoy)</button>
-        <button class="tab-btn" id="btnAyer" onclick="cambiarVista('ayer')">Registros Anteriores / Resueltos</button>
+        <button class="tab-btn" id="btnAyer" onclick="cambiarVista('ayer')">Registros Resueltos</button>
         <button class="refresh-btn" onclick="cargarDatos()">Actualizar Datos</button>
-        <div class="user-tag" id="lblUsuarioActivo">Agente: <b id="nombreAgenteSpan">---</b> <button onclick="cambiarUsuario()" title="Cambiar usuario">[Cambiar]</button></div>
+        <div class="user-tag">Agente: <b id="nombreAgenteSpan">---</b> <button onclick="cambiarUsuario()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-weight:bold;">[Cambiar]</button></div>
     </div>
 
     <table>
@@ -108,7 +65,7 @@
                 <th style="width: 10%;">ID</th>
                 <th style="width: 15%;">Fecha / Hora</th>
                 <th style="width: 25%;">Cliente</th>
-                <th style="width: 35%;">Detalles Completos</th>
+                <th style="width: 35%;">Detalles</th>
                 <th style="width: 15%; text-align: center;" id="thAccion">Acción</th>
             </tr>
         </thead>
@@ -116,32 +73,13 @@
     </table>
 </div>
 
-<div class="modal-overlay" id="modalDetalles" onclick="cerrarModalAfuera(event)">
-    <div class="modal-content">
-        <button class="close-modal" onclick="cerrarModal()">X</button>
-        <h3>Detalles del Turno <span id="mId"></span></h3>
-        <p><strong>Cliente:</strong> <span id="mNombre"></span></p>
-        <p><strong>Género:</strong> <span id="mGenero"></span></p>
-        <p><strong>Fecha de Nacimiento:</strong> <span id="mNacimiento"></span></p>
-        <p><strong>Padre:</strong> <span id="mPadre"></span></p>
-        <p><strong>Madre:</strong> <span id="mMadre"></span></p>
-        <p><strong>Lugar de Nacimiento:</strong> <span id="mLugar"></span></p>
-        <p><strong>Comentarios:</strong> <span id="mComentarios"></span></p>
-        <p><strong>Estado:</strong> <span id="mEstado"></span></p>
-        <p><strong>Atendido por:</strong> <span id="mAtendido"></span></p>
-    </div>
-</div>
-
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwLTm5kFSfWbVXjHvq_xaAULu7h1BQeBAJuTSAqXLr3CqOeUBSSsilqdlNkmUNHKGs/exec";
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbzvDBG4WC_M_TmYxCmIKblX24VxNb1Fx_7D7nJJP1DyEyVJDxkuh312FVtPeAUSNAQ2/exec";
 let vistaActual = 'pendientes';
 let datosCache = [];
 let localOverrides = {}; 
 let usuarioActual = localStorage.getItem("agente_nombre_fijo") || "";
 let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
-let ultimoTimestampAviso = Date.now();
-let temporizadorCierrePopup = null;
-let ultimoMovimiento = Date.now();
 let peticionEnCurso = false;
 
 window.onload = function() {
@@ -149,112 +87,31 @@ window.onload = function() {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
         document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
-        inicializarUltimoAviso();
         cargarDatos();
-        setInterval(verificarMensajesSupervisor, 4000);
-        setInterval(cargarDatos, 5000); // Intervalo optimizado a 5s para evitar saturación
+        setInterval(cargarDatos, 4000); // Sincronización fluida cada 4 segundos
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
 };
-
-window.addEventListener('mousemove', despertarSistema);
-window.addEventListener('click', despertarSistema);
-window.addEventListener('keypress', despertarSistema);
-window.addEventListener('touchstart', despertarSistema);
-
-function despertarSistema() {
-    let ahora = Date.now();
-    if (ahora - ultimoMovimiento > 25000) {
-        cargarDatos();
-    }
-    ultimoMovimiento = ahora;
-}
-
-document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-        cargarDatos();
-    }
-});
-
-async function inicializarUltimoAviso() {
-    try {
-        let res = await fetch(URL_WEB_APP + "?accion=obtener_avisos&t=" + new Date().getTime());
-        let avisos = await res.json();
-        let miAviso = avisos.find(a => a.ventanilla === ventanillaFija);
-        if (miAviso && miAviso.timestamp) {
-            ultimoTimestampAviso = miAviso.timestamp;
-        }
-    } catch(e) {}
-}
 
 function guardarUsuario() {
     let input = document.getElementById('inputUsuario').value.trim();
     if (!input) { alert("Por favor ingrese un nombre de agente válido."); return; }
     usuarioActual = input;
     ventanillaFija = document.getElementById('selectVentanillaLogin').value;
-    
     localStorage.setItem("agente_nombre_fijo", usuarioActual);
     localStorage.setItem("agente_ventanilla_fija", ventanillaFija);
-    
     document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
     document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
     document.getElementById('loginOverlay').style.display = 'none';
-    
-    inicializarUltimoAviso();
     cargarDatos();
-    setInterval(verificarMensajesSupervisor, 4000);
-    setInterval(cargarDatos, 5000);
+    setInterval(cargarDatos, 4000);
 }
 
 function cambiarUsuario() {
     localStorage.removeItem("agente_nombre_fijo");
     localStorage.removeItem("agente_ventanilla_fija");
-    document.getElementById('inputUsuario').value = "";
     document.getElementById('loginOverlay').style.display = 'flex';
-}
-
-async function verificarMensajesSupervisor() {
-    if (!ventanillaFija) return;
-    try {
-        let res = await fetch(URL_WEB_APP + "?accion=obtener_avisos&t=" + new Date().getTime());
-        let avisos = await res.json();
-        let miAviso = avisos.find(a => a.ventanilla === ventanillaFija);
-        
-        if (miAviso && miAviso.timestamp > ultimoTimestampAviso) {
-            ultimoTimestampAviso = miAviso.timestamp;
-            mostrarPopupAviso(miAviso.mensaje);
-        }
-    } catch(e) {}
-}
-
-function mostrarPopupAviso(texto) {
-    let popup = document.getElementById('popupAlerta');
-    let textoDiv = document.getElementById('textoPopupMensaje');
-    let timerBar = document.getElementById('popupTimerBar');
-    
-    textoDiv.innerText = texto;
-    popup.style.display = 'block';
-
-    timerBar.style.transition = 'none';
-    timerBar.style.width = '100%';
-    setTimeout(() => {
-        timerBar.style.transition = 'width 15s linear';
-        timerBar.style.width = '0%';
-    }, 50);
-
-    if (navigator.vibrate) navigator.vibrate(200);
-    if (temporizadorCierrePopup) clearTimeout(temporizadorCierrePopup);
-
-    temporizadorCierrePopup = setTimeout(() => {
-        cerrarPopup();
-    }, 15000);
-}
-
-function cerrarPopup() {
-    let popup = document.getElementById('popupAlerta');
-    popup.style.display = 'none';
-    if (temporizadorCierrePopup) clearTimeout(temporizadorCierrePopup);
 }
 
 async function cargarDatos() {
@@ -266,7 +123,7 @@ async function cargarDatos() {
         
         datosCache = serverData.map(row => {
             if (localOverrides[row.ID]) {
-                if (Date.now() - localOverrides[row.ID].timestamp < 45000) {
+                if (Date.now() - localOverrides[row.ID].timestamp < 30000) {
                     return { ...row, ...localOverrides[row.ID] };
                 } else {
                     delete localOverrides[row.ID];
@@ -274,10 +131,8 @@ async function cargarDatos() {
             }
             return row;
         });
-
         renderizarTabla();
-    } catch (e) { 
-        console.error("Error al obtener datos:", e); 
+    } catch (e) {
     } finally {
         peticionEnCurso = false;
     }
@@ -291,51 +146,28 @@ function cambiarVista(vista) {
     renderizarTabla();
 }
 
-function formatearFecha(fechaStr) {
-    if (!fechaStr) return '';
-    try {
-        let d = new Date(fechaStr);
-        if (!isNaN(d.getTime())) {
-            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-    } catch(err) {}
-    return fechaStr;
-}
-
 function renderizarTabla() {
     let tbody = document.getElementById('tablaCola');
     tbody.innerHTML = "";
     let hoyStr = new Date().toLocaleDateString();
 
-    let filtrados = [];
-    if (vistaActual === 'pendientes') {
-        filtrados = datosCache.filter(row => {
-            if (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto") return false;
-            if (String(row.Estado).trim().toLowerCase() === "resuelto") return false;
-            
+    let filtrados = datosCache.filter(row => {
+        let esResueltoLocal = (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto");
+        let esResueltoServidor = (String(row.Estado).trim().toLowerCase() === "resuelto");
+        
+        if (vistaActual === 'pendientes') {
+            if (esResueltoLocal || esResueltoServidor) return false;
             let est = String(row.Estado).trim();
-            if (est !== "Pendiente" && est !== "Llamado") return false;
-            
-            if (!row.FechaHora) return true;
-            let d = new Date(row.FechaHora);
-            let fechaFila = !isNaN(d.getTime()) ? d.toLocaleDateString() : row.FechaHora;
-            return fechaFila === hoyStr;
-        });
-    } else {
-        filtrados = datosCache.filter(row => {
-            let esResueltoLocal = (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto");
-            let esResueltoServidor = (String(row.Estado).trim().toLowerCase() === "resuelto");
-            if (!row.FechaHora) return esResueltoServidor || esResueltoLocal;
-            let d = new Date(row.FechaHora);
-            let fechaFila = !isNaN(d.getTime()) ? d.toLocaleDateString() : row.FechaHora;
-            return fechaFila !== hoyStr || esResueltoServidor || esResueltoLocal;
-        });
-    }
+            return est === "Pendiente" || est === "Llamado";
+        } else {
+            return esResueltoServidor || esResueltoLocal;
+        }
+    });
 
     if (filtrados.length === 0) {
-        let mensaje = vistaActual === 'pendientes' ? "No hay clientes activos en la cola." : "No hay registros anteriores.";
+        let mensaje = vistaActual === 'pendientes' ? "No hay clientes activos en la cola." : "No hay registros resueltos.";
         let colspan = vistaActual === 'pendientes' ? 5 : 4;
-        tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:#64748b; padding: 30px; font-size: 15px;">${mensaje}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:#64748b; padding: 30px;">${mensaje}</td></tr>`;
         return;
     }
 
@@ -357,61 +189,25 @@ function renderizarTabla() {
                 </td>`;
         }
         
-        let fechaLimpia = formatearFecha(row.FechaHora);
-        
         tr.innerHTML = `
             <td><b style="color: #0284c7; font-size: 15px;">${row.ID}</b></td>
-            <td style="color: #475569; font-size: 13px;">${fechaLimpia}</td>
-            <td>
-                <div class="cliente-info">${row.Nombres} ${row.Apellidos}</div>
-                <div class="cliente-sub">Género: ${row.Genero} | Nacimiento: ${row.FechaNacimiento ? row.FechaNacimiento.substring(0,10) : 'N/D'}</div>
-            </td>
-            <td>
-                <div class="detalles-resumen">
-                    <span>Padre: ${row.Padre || 'N/D'} | Comentarios: ${row.Comentarios ? (row.Comentarios.substring(0, 20) + '...') : 'Ninguno'}</span>
-                    <button class="view-btn" onclick='abrirModal(${JSON.stringify(row)})'>👁️ Ver</button>
-                </div>
-            </td>
+            <td style="color: #475569; font-size: 13px;">${row.FechaHora ? new Date(row.FechaHora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</td>
+            <td><div class="cliente-info">${row.Nombres} ${row.Apellidos}</div><div class="cliente-sub">Género: ${row.Genero}</div></td>
+            <td><div class="detalles-resumen"><span>Padre: ${row.Padre || 'N/D'} | Comentarios: ${row.Comentarios || 'Ninguno'}</span></div></td>
             ${columnaAccion}
         `;
         tbody.appendChild(tr);
     });
 }
 
-function abrirModal(row) {
-    document.getElementById('mId').innerText = row.ID;
-    document.getElementById('mNombre').innerText = row.Nombres + " " + row.Apellidos;
-    document.getElementById('mGenero').innerText = row.Genero || 'N/D';
-    document.getElementById('mNacimiento').innerText = row.FechaNacimiento ? row.FechaNacimiento.substring(0,10) : 'N/D';
-    document.getElementById('mPadre').innerText = row.Padre || 'No registrado';
-    document.getElementById('mMadre').innerText = row.Madre || 'No registrado';
-    document.getElementById('mLugar').innerText = row.LugarNacimiento || 'No registrado';
-    document.getElementById('mComentarios').innerText = row.Comentarios || 'Ninguno';
-    document.getElementById('mEstado').innerText = row.Estado;
-    document.getElementById('mAtendido').innerText = (row.AtendidoPor || 'Pendiente') + " (Ventanilla " + (row.Ventanilla || "3") + ")";
-    document.getElementById('modalDetalles').style.display = 'flex';
-}
-
-function cerrarModal() { document.getElementById('modalDetalles').style.display = 'none'; }
-function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
-
 function llamarCliente(id) {
-    let override = {
-        Estado: "Llamado",
-        Ventanilla: ventanillaFija,
-        UltimoLlamado: Date.now(),
-        timestamp: Date.now()
-    };
+    let override = { Estado: "Llamado", Ventanilla: ventanillaFija, UltimoLlamado: Date.now(), timestamp: Date.now() };
     localOverrides[id] = override;
-
     let index = datosCache.findIndex(r => r.ID === id);
-    if (index !== -1) {
-        datosCache[index] = { ...datosCache[index], ...override };
-        renderizarTabla();
-    }
+    if (index !== -1) { datosCache[index] = { ...datosCache[index], ...override }; renderizarTabla(); }
 
-    let urlLlamada = `${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${new Date().getTime()}`;
-    fetch(urlLlamada).catch(err => console.error(err));
+    fetch(`${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${Date.now()}`)
+        .then(() => cargarDatos());
 }
 
 function marcarResuelto(id) {
@@ -419,29 +215,15 @@ function marcarResuelto(id) {
     if (btn) { btn.innerText = "Guardando..."; btn.disabled = true; }
     
     let atendidoTexto = usuarioActual + " (V." + ventanillaFija + ")";
-    let override = {
-        Estado: "Resuelto",
-        AtendidoPor: atendidoTexto,
-        timestamp: Date.now() + 45000
-    };
+    let override = { Estado: "Resuelto", AtendidoPor: atendidoTexto, timestamp: Date.now() + 30000 };
     localOverrides[id] = override;
-
+    
     let index = datosCache.findIndex(r => r.ID === id);
-    if (index !== -1) {
-        datosCache[index] = { ...datosCache[index], ...override };
-        renderizarTabla();
-    }
+    if (index !== -1) { datosCache[index] = { ...datosCache[index], ...override }; renderizarTabla(); }
 
-    let urlResuelto = `${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${new Date().getTime()}`;
-    fetch(urlResuelto)
-        .then(res => res.json())
-        .then(data => {
-            cargarDatos();
-        })
-        .catch(e => {
-            alert("Error al marcar como resuelto.");
-            if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
-        });
+    fetch(`${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${Date.now()}`)
+        .then(() => cargarDatos())
+        .catch(() => { if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; } });
 }
 </script>
 </body>
