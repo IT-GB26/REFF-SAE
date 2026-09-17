@@ -156,6 +156,7 @@ let usuarioActual = localStorage.getItem("agente_nombre_fijo") || "";
 let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
 let ultimoTimestampAviso = Date.now();
 let temporizadorCierrePopup = null;
+let ultimoMovimiento = Date.now();
 
 window.onload = function() {
     if (usuarioActual) {
@@ -169,6 +170,25 @@ window.onload = function() {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
 };
+
+// --- DESPERTADOR DE OFICINA PARA EVITAR REACCIONES LENTAS ---
+window.addEventListener('mousemove', verificarDespertar);
+window.addEventListener('click', verificarDespertar);
+window.addEventListener('keypress', verificarDespertar);
+
+function verificarDespertar() {
+    let ahora = Date.now();
+    if (ahora - ultimoMovimiento > 45000) {
+        cargarDatos();
+    }
+    ultimoMovimiento = ahora;
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        cargarDatos();
+    }
+});
 
 async function inicializarUltimoAviso() {
     try {
@@ -357,9 +377,7 @@ function abrirModal(row) {
 function cerrarModal() { document.getElementById('modalDetalles').style.display = 'none'; }
 function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
 
-// LLAMADA Y RE-LLAMADA INSTÁNEA (SIN NINGUNA PAUSA DE ESPERA)
 function llamarCliente(id) {
-    // 1. Actualización visual instantánea al milisegundo en la pantalla del agente
     let index = datosCache.findIndex(r => r.ID === id);
     if (index !== -1) {
         datosCache[index].Estado = "Llamado";
@@ -368,7 +386,6 @@ function llamarCliente(id) {
         renderizarTabla();
     }
 
-    // 2. Envío de la orden al servidor en segundo plano de manera asíncrona limpia
     let urlLlamada = `${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${new Date().getTime()}`;
     fetch(urlLlamada, { method: 'GET', mode: 'no-cors' });
 }
@@ -377,7 +394,6 @@ async function marcarResuelto(id) {
     let btn = document.getElementById(`btnResuelto_${id}`);
     if (btn) { btn.innerText = "Guardando..."; btn.disabled = true; }
     
-    // Actualización visual inmediata para el botón resuelto
     let index = datosCache.findIndex(r => r.ID === id);
     if (index !== -1) {
         datosCache[index].Estado = "Resuelto";
