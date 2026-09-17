@@ -357,32 +357,39 @@ function abrirModal(row) {
 function cerrarModal() { document.getElementById('modalDetalles').style.display = 'none'; }
 function cerrarModalAfuera(event) { if (event.target.id === 'modalDetalles') cerrarModal(); }
 
-// LLAMADA Y RE-LLAMADA CON ACTUALIZACIÓN VISUAL INSTANTÁNEA
-async function llamarCliente(id) {
-    try {
-        let index = datosCache.findIndex(r => r.ID === id);
-        if (index !== -1) {
-            datosCache[index].Estado = "Llamado";
-            datosCache[index].Ventanilla = ventanillaFija;
-            datosCache[index].UltimoLlamado = Date.now();
-            renderizarTabla();
-        }
+// LLAMADA Y RE-LLAMADA INSTÁNEA (SIN NINGUNA PAUSA DE ESPERA)
+function llamarCliente(id) {
+    // 1. Actualización visual instantánea al milisegundo en la pantalla del agente
+    let index = datosCache.findIndex(r => r.ID === id);
+    if (index !== -1) {
+        datosCache[index].Estado = "Llamado";
+        datosCache[index].Ventanilla = ventanillaFija;
+        datosCache[index].UltimoLlamado = Date.now();
+        renderizarTabla();
+    }
 
-        let urlLlamada = `${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${new Date().getTime()}`;
-        fetch(urlLlamada, { method: 'GET', mode: 'no-cors' });
-    } catch (e) { console.error("Error al llamar:", e); }
+    // 2. Envío de la orden al servidor en segundo plano de manera asíncrona limpia
+    let urlLlamada = `${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${new Date().getTime()}`;
+    fetch(urlLlamada, { method: 'GET', mode: 'no-cors' });
 }
 
 async function marcarResuelto(id) {
     let btn = document.getElementById(`btnResuelto_${id}`);
     if (btn) { btn.innerText = "Guardando..."; btn.disabled = true; }
+    
+    // Actualización visual inmediata para el botón resuelto
+    let index = datosCache.findIndex(r => r.ID === id);
+    if (index !== -1) {
+        datosCache[index].Estado = "Resuelto";
+        datosCache[index].AtendidoPor = usuarioActual + " (V." + ventanillaFija + ")";
+        renderizarTabla();
+    }
+
     try {
         let urlResuelto = `${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(usuarioActual + " (V." + ventanillaFija + ")")}&t=${new Date().getTime()}`;
-        await fetch(urlResuelto, { method: 'GET', mode: 'no-cors' });
-        setTimeout(cargarDatos, 200);
+        fetch(urlResuelto, { method: 'GET', mode: 'no-cors' });
     } catch (e) {
         alert("Error al marcar como resuelto.");
-        if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
     }
 }
 
