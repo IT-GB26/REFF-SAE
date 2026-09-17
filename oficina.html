@@ -171,7 +171,6 @@ window.onload = function() {
     }
 };
 
-// --- DESPERTADOR DE OFICINA PARA EVITAR REACCIONES LENTAS ---
 window.addEventListener('mousemove', verificarDespertar);
 window.addEventListener('click', verificarDespertar);
 window.addEventListener('keypress', verificarDespertar);
@@ -387,7 +386,7 @@ function llamarCliente(id) {
     }
 
     let urlLlamada = `${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${new Date().getTime()}`;
-    fetch(urlLlamada, { method: 'GET', mode: 'no-cors' });
+    navigator.sendBeacon ? navigator.sendBeacon(urlLlamada) : fetch(urlLlamada, { method: 'GET', mode: 'no-cors' });
 }
 
 async function marcarResuelto(id) {
@@ -403,7 +402,7 @@ async function marcarResuelto(id) {
 
     try {
         let urlResuelto = `${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(usuarioActual + " (V." + ventanillaFija + ")")}&t=${new Date().getTime()}`;
-        fetch(urlResuelto, { method: 'GET', mode: 'no-cors' });
+        navigator.sendBeacon ? navigator.sendBeacon(urlResuelto) : fetch(urlResuelto, { method: 'GET', mode: 'no-cors' });
     } catch (e) {
         alert("Error al marcar como resuelto.");
     }
