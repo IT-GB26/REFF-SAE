@@ -133,6 +133,7 @@
 </div>
 
 <script>
+// URL actualizada con la nueva versión implementada
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwsXRt9m2AbYErtmOO8ZXNmxbkhVLIuYW61hD242R2VGI6Ac87-JxWH5SJOwlA929VN/exec";
 let vistaActual = 'pendientes';
 let datosCache = [];
@@ -264,7 +265,7 @@ async function cargarDatos() {
         
         datosCache = serverData.map(row => {
             if (localOverrides[row.ID]) {
-                if (Date.now() - localOverrides[row.ID].timestamp < 30000) {
+                if (Date.now() - localOverrides[row.ID].timestamp < 45000) {
                     return { ...row, ...localOverrides[row.ID] };
                 } else {
                     delete localOverrides[row.ID];
@@ -308,10 +309,13 @@ function renderizarTabla() {
     let filtrados = [];
     if (vistaActual === 'pendientes') {
         filtrados = datosCache.filter(row => {
+            // Filtro estricto que oculta cualquier registro resuelto de forma local o en servidor
             if (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto") return false;
-            if (row.Estado === "Resuelto") return false;
+            if (String(row.Estado).trim().toLowerCase() === "resuelto") return false;
             
-            if (row.Estado !== "Pendiente" && row.Estado !== "Llamado") return false;
+            let est = String(row.Estado).trim();
+            if (est !== "Pendiente" && est !== "Llamado") return false;
+            
             if (!row.FechaHora) return true;
             let d = new Date(row.FechaHora);
             let fechaFila = !isNaN(d.getTime()) ? d.toLocaleDateString() : row.FechaHora;
@@ -319,11 +323,12 @@ function renderizarTabla() {
         });
     } else {
         filtrados = datosCache.filter(row => {
-            if (!row.FechaHora) return false;
+            let esResueltoLocal = (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto");
+            let esResueltoServidor = (String(row.Estado).trim().toLowerCase() === "resuelto");
+            if (!row.FechaHora) return esResueltoServidor || esResueltoLocal;
             let d = new Date(row.FechaHora);
             let fechaFila = !isNaN(d.getTime()) ? d.toLocaleDateString() : row.FechaHora;
-            let esResueltoLocal = (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto");
-            return fechaFila !== hoyStr || row.Estado === "Resuelto" || esResueltoLocal;
+            return fechaFila !== hoyStr || esResueltoServidor || esResueltoLocal;
         });
     }
 
@@ -417,7 +422,7 @@ function marcarResuelto(id) {
     let override = {
         Estado: "Resuelto",
         AtendidoPor: atendidoTexto,
-        timestamp: Date.now() + 30000
+        timestamp: Date.now() + 45000 // Margen amplio para evitar rebotes de lectura
     };
     localOverrides[id] = override;
 
