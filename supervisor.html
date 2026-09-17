@@ -139,7 +139,7 @@
 
 <script>
 const URLS_SECTORES = {
-    sector1: "https://script.google.com/macros/s/AKfycbwsXRt9m2AbYErtmOO8ZXNmxbkhVLIuYW61hD242R2VGI6Ac87-JxWH5SJOwlA929VN/exec",
+    sector1: "https://script.google.com/macros/s/AKfycbwLTm5kFSfWbVXjHvq_xaAULu7h1BQeBAJuTSAqXLr3CqOeUBSSsilqdlNkmUNHKGs/exec",
     sector2: "https://script.google.com/macros/s/URL_DEL_SECTOR_2/exec"
 };
 
@@ -274,19 +274,9 @@ function exportarReporteProfesionalExcel() {
                 <tr><td colspan="13" class="subtitulo">Generado el: ${new Date().toLocaleString()} | Periodo: ${periodo.toUpperCase()}</td></tr>
                 <tr><td colspan="13"></td></tr>
                 <tr>
-                    <th>Turno ID</th>
-                    <th>Fecha y Hora</th>
-                    <th>Nombres</th>
-                    <th>Apellidos</th>
-                    <th>Género</th>
-                    <th>Fecha Nacimiento</th>
-                    <th>Padre</th>
-                    <th>Madre</th>
-                    <th>Lugar de Nacimiento</th>
-                    <th>Comentarios</th>
-                    <th>Estado</th>
-                    <th>Ventanilla</th>
-                    <th>Atendido Por</th>
+                    <th>Turno ID</th><th>Fecha y Hora</th><th>Nombres</th><th>Apellidos</th><th>Género</th>
+                    <th>Fecha Nacimiento</th><th>Padre</th><th>Madre</th><th>Lugar de Nacimiento</th>
+                    <th>Comentarios</th><th>Estado</th><th>Ventanilla</th><th>Atendido Por</th>
                 </tr>`;
 
     filtrados.forEach(row => {
@@ -337,7 +327,7 @@ async function enviarMensajeSupervisor() {
     } catch(e) { alert("Error al enviar aviso."); }
 }
 
-setInterval(cargarDatosSupervisor, 3000);
+setInterval(cargarDatosSupervisor, 4000);
 cargarDatosSupervisor();
 </script>
 </body>
