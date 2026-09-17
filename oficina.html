@@ -152,7 +152,7 @@
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxnduaG9Pr9xn46XUE_a2qVAqWcHpdIIMrspt_iNUAXwdtJ21Cq6yjKhZm9vkFB5WHn/exec";
 let vistaActual = 'pendientes';
 let datosCache = [];
-let localOverrides = {}; // Control anti-rebote para acciones locales instantáneas
+let localOverrides = {}; 
 let usuarioActual = localStorage.getItem("agente_nombre_fijo") || "";
 let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
 let ultimoTimestampAviso = Date.now();
@@ -172,14 +172,16 @@ window.onload = function() {
     }
 };
 
-window.addEventListener('mousemove', verificarDespertar);
-window.addEventListener('click', verificarDespertar);
-window.addEventListener('keypress', verificarDespertar);
+// --- DESPERTADOR ANTISUEÑO (Descongela pestañas inactivas al primer toque o movimiento) ---
+window.addEventListener('mousemove', despertarSistema);
+window.addEventListener('click', despertarSistema);
+window.addEventListener('keypress', despertarSistema);
+window.addEventListener('touchstart', despertarSistema);
 
-function verificarDespertar() {
+function despertarSistema() {
     let ahora = Date.now();
-    if (ahora - ultimoMovimiento > 45000) {
-        cargarDatos();
+    if (ahora - ultimoMovimiento > 25000) {
+        cargarDatos(); // Forzamos actualización limpia inmediata al reactivar
     }
     ultimoMovimiento = ahora;
 }
@@ -275,7 +277,6 @@ async function cargarDatos() {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
         let serverData = await res.json();
         
-        // Protege los cambios locales recientes para evitar el efecto rebote con el servidor
         datosCache = serverData.map(row => {
             if (localOverrides[row.ID]) {
                 if (Date.now() - localOverrides[row.ID].timestamp < 15000) {
