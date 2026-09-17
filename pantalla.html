@@ -138,7 +138,8 @@ function iniciarReproductorVideos() {
     let elementoVideo = document.getElementById('videoPlaylist');
     if (!elementoVideo) return;
     
-    elementoVideo.volume = 0.30; 
+    // Volumen estandarizado y suave del video al 15%
+    elementoVideo.volume = 0.15; 
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
     elementoVideo.play().catch(err => console.log("Reproducción pendiente", err));
@@ -190,7 +191,7 @@ function procesarColaVoz() {
 
     let elementoVideo = document.getElementById('videoPlaylist');
     
-    // 1. Silenciamos el video por completo 1 segundo antes de hablar
+    // Silenciamos completamente el video antes de hablar
     if (elementoVideo) { 
         elementoVideo.volume = 0.0; 
     }
@@ -203,19 +204,19 @@ function procesarColaVoz() {
     
     let utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = 'es-ES';
-    utterance.rate = 0.90;  
+    utterance.rate = 0.85;  // Velocidad moderada, clara y precisa
     utterance.pitch = 1.0; 
-    utterance.volume = 1.0;
+    utterance.volume = 1.0; // Volumen al máximo para asegurar claridad
 
     let voces = window.speechSynthesis.getVoices();
     let vozSuave = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Helena')));
     if (vozSuave) { utterance.voice = vozSuave; }
 
     utterance.onend = () => {
-        // 2. Al terminar la voz, esperamos 2 segundos adicionales en silencio antes de restaurar el volumen del video
+        // Al terminar, esperamos 2 segundos en silencio antes de restaurar el video al 15%
         setTimeout(() => {
             if (elementoVideo) { 
-                elementoVideo.volume = 0.30; 
+                elementoVideo.volume = 0.15; 
             }
             reproduciendoVozActiva = false;
             setTimeout(procesarColaVoz, 200);
@@ -225,7 +226,7 @@ function procesarColaVoz() {
     utterance.onerror = () => {
         setTimeout(() => {
             if (elementoVideo) { 
-                elementoVideo.volume = 0.30; 
+                elementoVideo.volume = 0.15; 
             }
             reproduciendoVozActiva = false;
             setTimeout(procesarColaVoz, 200);
