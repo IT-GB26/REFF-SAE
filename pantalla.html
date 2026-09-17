@@ -93,7 +93,7 @@
 </div>
 
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwsXRt9m2AbYErtmOO8ZXNmxbkhVLIuYW61hD242R2VGI6Ac87-JxWH5SJOwlA929VN/exec";
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwLTm5kFSfWbVXjHvq_xaAULu7h1BQeBAJuTSAqXLr3CqOeUBSSsilqdlNkmUNHKGs/exec";
 
 let ultimoTimestampProcesado = Date.now();
 let colaTurnosVoz = [];
@@ -103,17 +103,7 @@ const listaVideos = [
     "videos/anuncio1.mp4",    
     "videos/anuncio4.mp4", 
     "videos/anuncio1.mp4",
-    "videos/anuncio5.mp4",
-    "videos/anuncio1.mp4", 
-    "videos/anuncio6.mp4", 
-    "videos/anuncio1.mp4", 
-    "videos/anuncio7.mp4",
-    "videos/anuncio1.mp4", 
-    "videos/anuncio8.mp4", 
-    "videos/anuncio1.mp4", 
-    "videos/anuncio9.mp4",
-    "videos/anuncio1.mp4", 
-    "videos/anuncio10.mp4"
+    "videos/anuncio5.mp4"
 ];
 let indiceVideoActual = 0;
 
@@ -126,19 +116,16 @@ function iniciarSistemaPantalla() {
         try {
             let dummyUtterance = new SpeechSynthesisUtterance("");
             window.speechSynthesis.speak(dummyUtterance);
-        } catch(e) {
-            console.log("Audio inicializado.");
-        }
+        } catch(e) {}
     }, 100);
 
-    setInterval(sincronizarPantalla, 1000);
+    setInterval(sincronizarPantalla, 2500);
 }
 
 function iniciarReproductorVideos() {
     let elementoVideo = document.getElementById('videoPlaylist');
     if (!elementoVideo) return;
     
-    // Volumen estandarizado y suave del video al 15%
     elementoVideo.volume = 0.15; 
     elementoVideo.src = listaVideos[indiceVideoActual];
     elementoVideo.load();
@@ -188,14 +175,9 @@ function procesarColaVoz() {
     
     reproduciendoVozActiva = true;
     let item = colaTurnosVoz.shift();
-
     let elementoVideo = document.getElementById('videoPlaylist');
     
-    // Silenciamos completamente el video antes de hablar
-    if (elementoVideo) { 
-        elementoVideo.volume = 0.0; 
-    }
-
+    if (elementoVideo) { elementoVideo.volume = 0.0; }
     window.speechSynthesis.cancel();
 
     let letra = item.id.replace(/[0-9]/g, ''); 
@@ -204,20 +186,17 @@ function procesarColaVoz() {
     
     let utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = 'es-ES';
-    utterance.rate = 0.85;  // Velocidad moderada, clara y precisa
+    utterance.rate = 0.85;
     utterance.pitch = 1.0; 
-    utterance.volume = 1.0; // Volumen al máximo para asegurar claridad
+    utterance.volume = 1.0;
 
     let voces = window.speechSynthesis.getVoices();
     let vozSuave = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Helena')));
     if (vozSuave) { utterance.voice = vozSuave; }
 
     utterance.onend = () => {
-        // Al terminar, esperamos 2 segundos en silencio antes de restaurar el video al 15%
         setTimeout(() => {
-            if (elementoVideo) { 
-                elementoVideo.volume = 0.15; 
-            }
+            if (elementoVideo) { elementoVideo.volume = 0.15; }
             reproduciendoVozActiva = false;
             setTimeout(procesarColaVoz, 200);
         }, 2000);
@@ -225,9 +204,7 @@ function procesarColaVoz() {
 
     utterance.onerror = () => {
         setTimeout(() => {
-            if (elementoVideo) { 
-                elementoVideo.volume = 0.15; 
-            }
+            if (elementoVideo) { elementoVideo.volume = 0.15; }
             reproduciendoVozActiva = false;
             setTimeout(procesarColaVoz, 200);
         }, 2000);
@@ -262,7 +239,7 @@ async function sincronizarPantalla() {
             });
         }
 
-        let llamados = datos.filter(row => row.Estado.toLowerCase() === "llamado");
+        let llamados = datos.filter(row => String(row.Estado).toLowerCase() === "llamado");
         if (llamados.length > 0) {
             llamados.sort((a, b) => b.UltimoLlamado - a.UltimoLlamado);
             let actual = llamados[0];
@@ -282,16 +259,9 @@ async function sincronizarPantalla() {
     }
 }
 
-// --- MECANISMOS ANTI-SUEÑO PARA LA PANTALLA ---
 document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-        sincronizarPantalla();
-    }
+    if (!document.hidden) { sincronizarPantalla(); }
 });
-
-setInterval(() => {
-    fetch(URL_WEB_APP + "?t=" + new Date().getTime()).catch(e => {});
-}, 15000);
 
 window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 </script>
