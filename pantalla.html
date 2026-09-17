@@ -5,47 +5,25 @@
     <title>Pantalla Principal - Sala de Espera</title>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background: #f8f9fa; color: #333; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         #audioOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.95); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 20px; }
-        #audioOverlay h2 { font-size: 32px; margin-bottom: 10px; color: #38bdf8; }
-        #audioOverlay p { font-size: 18px; color: #94a3b8; margin-bottom: 30px; max-width: 500px; }
-        #audioOverlay button { background: #0284c7; color: white; border: none; padding: 16px 40px; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 20px rgba(2, 132, 199, 0.4); transition: background 0.2s; }
-        #audioOverlay button:hover { background: #0369a1; }
-
-        header { background: #ffffff; height: 10vh; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        header img { max-height: 50px; }
-        header h1 { margin: 0; font-size: 24px; color: #1e293b; font-weight: 700; letter-spacing: 0.5px; }
-        
-        .header-right { display: flex; align-items: center; gap: 20px; }
+        #audioOverlay button { background: #0284c7; color: white; border: none; padding: 16px 40px; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; }
+        header { background: #ffffff; height: 10vh; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid #e2e8f0; }
+        header h1 { margin: 0; font-size: 24px; color: #1e293b; font-weight: 700; }
         #reloj { font-size: 22px; font-weight: 600; color: #64748b; }
-
         .main-layout { display: flex; height: 72vh; width: 100vw; }
-        
-        .ads-side { width: 25%; background: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 15px; border-right: 1px solid #e2e8f0; border-left: 1px solid #e2e8f0; position: relative; }
-        .ads-side video, .ads-side iframe, .ads-side img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-
-        .center-stage { width: 50%; background: #f8f9fa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; }
-        
-        .ticket-box { background: #ffffff; border: 2px solid #cbd5e1; border-radius: 24px; padding: 20px 10px; width: 95%; height: 92%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.08); }
-        .label-turno { font-size: 22px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; font-weight: 700; letter-spacing: 2px; }
-        
-        .numero-cliente { 
-            font-size: 180px; 
-            font-weight: 900; 
-            color: #0f172a; 
-            line-height: 1; 
-            margin: 10px 0; 
-            transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
-        }
+        .ads-side { width: 25%; background: #ffffff; display: flex; justify-content: center; align-items: center; padding: 15px; border: 1px solid #e2e8f0; }
+        .ads-side video { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+        .center-stage { width: 50%; background: #f8f9fa; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .ticket-box { background: #ffffff; border: 2px solid #cbd5e1; border-radius: 24px; padding: 20px; width: 95%; height: 92%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
+        .label-turno { font-size: 22px; color: #64748b; text-transform: uppercase; font-weight: 700; }
+        .numero-cliente { font-size: 180px; font-weight: 900; color: #0f172a; line-height: 1; margin: 10px 0; transition: transform 0.3s; }
         .animar-llamado { transform: scale(1.1); color: #0284c7; }
-
-        .ventanilla-asignada { font-size: 42px; color: #0284c7; font-weight: 800; margin-top: 15px; background: #e0f2fe; padding: 10px 30px; border-radius: 14px; display: inline-block; letter-spacing: 1px; }
-
-        .footer-espera { height: 18vh; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 30px; gap: 20px; box-shadow: -4px 6px -1px rgba(0,0,0,0.02); }
-        .espera-titulo { font-size: 16px; font-weight: 700; color: #64748b; text-transform: uppercase; min-width: 150px; border-right: 2px solid #e2e8f0; padding-right: 15px; }
-        .espera-lista { display: flex; gap: 15px; overflow-x: auto; width: 100%; padding: 5px 0; }
-        .turno-card { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 20px; text-align: center; min-width: 130px; flex-shrink: 0; }
+        .ventanilla-asignada { font-size: 42px; color: #0284c7; font-weight: 800; margin-top: 15px; background: #e0f2fe; padding: 10px 30px; border-radius: 14px; }
+        .footer-espera { height: 18vh; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 30px; gap: 20px; }
+        .espera-titulo { font-size: 16px; font-weight: 700; color: #64748b; text-transform: uppercase; min-width: 150px; }
+        .espera-lista { display: flex; gap: 15px; overflow-x: auto; width: 100%; }
+        .turno-card { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 20px; text-align: center; min-width: 130px; }
         .turno-card .t-id { font-size: 24px; font-weight: 800; color: #1e293b; }
     </style>
 </head>
@@ -53,112 +31,68 @@
 
 <div id="audioOverlay">
     <h2>Sistema de Turnos Activo</h2>
-    <p>Haga clic en el botón para iniciar la reproducción fluida de videos y habilitar el altavoz de la sala.</p>
+    <p>Haga clic en el botón para iniciar la reproducción fluida de la sala.</p>
     <button onclick="iniciarSistemaPantalla()">Iniciar Pantalla</button>
 </div>
 
 <header>
-    <img src="img/logo.png" alt="Logo">
     <h1>SALA DE ESPERA</h1>
-    <div class="header-right">
-        <div id="reloj">00:00:00</div>
-    </div>
+    <div id="reloj">00:00:00</div>
 </header>
 
 <div class="main-layout">
-    <div class="ads-side" id="contenedorMultimedia">
-        <video id="videoPlaylist" autoplay playsinline></video>
-    </div>
-
+    <div class="ads-side"><video id="videoPlaylist" autoplay muted playsinline></video></div>
     <div class="center-stage">
         <div class="ticket-box">
             <div class="label-turno">Turno Actual</div>
             <div class="numero-cliente" id="lblNumero">---</div>
-            <div>
-                <span class="ventanilla-asignada" id="lblVentanilla">VENTANILLA --</span>
-            </div>
+            <div><span class="ventanilla-asignada" id="lblVentanilla">VENTANILLA --</span></div>
         </div>
     </div>
-
-    <div class="ads-side">
-        <img src="img/publicidad1.jpg" alt="Publicidad">
-    </div>
+    <div class="ads-side"><div style="color:#64748b; font-weight:bold;">Publicidad / Anuncios</div></div>
 </div>
 
 <div class="footer-espera">
     <div class="espera-titulo">Próximos Turnos</div>
-    <div class="espera-lista" id="contenedorProximos">
-        <div class="turno-card"><div class="t-id">--</div></div>
-    </div>
+    <div class="espera-lista" id="contenedorProximos"><div class="turno-card"><div class="t-id">--</div></div></div>
 </div>
 
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwLTm5kFSfWbVXjHvq_xaAULu7h1BQeBAJuTSAqXLr3CqOeUBSSsilqdlNkmUNHKGs/exec";
-
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbzvDBG4WC_M_TmYxCmIKblX24VxNb1Fx_7D7nJJP1DyEyVJDxkuh312FVtPeAUSNAQ2/exec";
 let ultimoTimestampProcesado = Date.now();
 let colaTurnosVoz = [];
 let reproduciendoVozActiva = false;
-
-const listaVideos = [
-    "videos/anuncio1.mp4",    
-    "videos/anuncio4.mp4", 
-    "videos/anuncio1.mp4",
-    "videos/anuncio5.mp4"
-];
+const listaVideos = ["videos/anuncio1.mp4", "videos/anuncio4.mp4"];
 let indiceVideoActual = 0;
 
 function iniciarSistemaPantalla() {
     document.getElementById('audioOverlay').style.display = 'none';
     ultimoTimestampProcesado = Date.now();
     iniciarReproductorVideos();
-    
-    setTimeout(() => {
-        try {
-            let dummyUtterance = new SpeechSynthesisUtterance("");
-            window.speechSynthesis.speak(dummyUtterance);
-        } catch(e) {}
-    }, 100);
-
-    setInterval(sincronizarPantalla, 2500);
+    setInterval(sincronizarPantalla, 2500); // Sincronización rápida y constante cada 2.5s
 }
 
 function iniciarReproductorVideos() {
     let elementoVideo = document.getElementById('videoPlaylist');
     if (!elementoVideo) return;
-    
-    elementoVideo.volume = 0.15; 
+    elementoVideo.volume = 0.15;
     elementoVideo.src = listaVideos[indiceVideoActual];
-    elementoVideo.load();
-    elementoVideo.play().catch(err => console.log("Reproducción pendiente", err));
-    
+    elementoVideo.play().catch(() => {});
     elementoVideo.onended = () => {
         indiceVideoActual = (indiceVideoActual + 1) % listaVideos.length;
         iniciarReproductorVideos();
     };
 }
 
-setInterval(() => {
-    document.getElementById('reloj').innerText = new Date().toLocaleTimeString();
-}, 1000);
+setInterval(() => { document.getElementById('reloj').innerText = new Date().toLocaleTimeString(); }, 1000);
 
 function convertirNumeroALetras(numStr) {
     let match = numStr.match(/\d+/);
     if (!match) return numStr;
     let num = parseInt(match[0], 10);
-
-    if (num === 100) return "cien";
-    if (num > 100 && num < 1000) {
-        let c = Math.floor(num / 100);
-        let resto = num % 100;
-        let centenasStr = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"][c];
-        if (resto === 0) return centenasStr;
-        return centenasStr + " " + convertirNumeroALetras(resto.toString());
-    }
-
     const unidades = ["", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"];
     const especiales = ["diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve"];
     const decenas = ["", "", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
-
     if (num < 10) return unidades[num];
     if (num >= 10 && num < 20) return especiales[num - 10];
     if (num >= 20 && num < 30) return num === 20 ? "veinte" : "veinti" + unidades[num - 20];
@@ -167,49 +101,32 @@ function convertirNumeroALetras(numStr) {
         let u = num % 10;
         return decenas[d] + (u > 0 ? " y " + unidades[u] : "");
     }
-    return num.toString(); 
+    return num.toString();
 }
 
 function procesarColaVoz() {
     if (reproduciendoVozActiva || colaTurnosVoz.length === 0) return;
-    
     reproduciendoVozActiva = true;
     let item = colaTurnosVoz.shift();
     let elementoVideo = document.getElementById('videoPlaylist');
-    
-    if (elementoVideo) { elementoVideo.volume = 0.0; }
-    window.speechSynthesis.cancel();
+    if (elementoVideo) elementoVideo.volume = 0.0;
 
-    let letra = item.id.replace(/[0-9]/g, ''); 
-    let numLimpio = convertirNumeroALetras(item.id); 
+    let letra = item.id.replace(/[0-9]/g, '');
+    let numLimpio = convertirNumeroALetras(item.id);
     let texto = `Número de cliente ${letra} ${numLimpio}, pasar a ventanilla ${item.ventanilla}.`;
     
     let utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = 'es-ES';
     utterance.rate = 0.85;
-    utterance.pitch = 1.0; 
     utterance.volume = 1.0;
-
-    let voces = window.speechSynthesis.getVoices();
-    let vozSuave = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Helena')));
-    if (vozSuave) { utterance.voice = vozSuave; }
 
     utterance.onend = () => {
         setTimeout(() => {
-            if (elementoVideo) { elementoVideo.volume = 0.15; }
+            if (elementoVideo) elementoVideo.volume = 0.15;
             reproduciendoVozActiva = false;
-            setTimeout(procesarColaVoz, 200);
-        }, 2000);
+            procesarColaVoz();
+        }, 1500);
     };
-
-    utterance.onerror = () => {
-        setTimeout(() => {
-            if (elementoVideo) { elementoVideo.volume = 0.15; }
-            reproduciendoVozActiva = false;
-            setTimeout(procesarColaVoz, 200);
-        }, 2000);
-    };
-
     window.speechSynthesis.speak(utterance);
 }
 
@@ -224,7 +141,7 @@ async function sincronizarPantalla() {
         let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
         let datos = await res.json();
         
-        let pendientes = datos.filter(row => row.Estado === "Pendiente");
+        let pendientes = datos.filter(row => String(row.Estado).trim().toLowerCase() === "pendiente");
         let contenedorProximos = document.getElementById('contenedorProximos');
         contenedorProximos.innerHTML = "";
 
@@ -239,7 +156,7 @@ async function sincronizarPantalla() {
             });
         }
 
-        let llamados = datos.filter(row => String(row.Estado).toLowerCase() === "llamado");
+        let llamados = datos.filter(row => String(row.Estado).trim().toLowerCase() === "llamado");
         if (llamados.length > 0) {
             llamados.sort((a, b) => b.UltimoLlamado - a.UltimoLlamado);
             let actual = llamados[0];
@@ -254,16 +171,8 @@ async function sincronizarPantalla() {
                 procesarColaVoz();
             }
         }
-    } catch (e) {
-        console.log("Sincronizando...", e);
-    }
+    } catch (e) {}
 }
-
-document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) { sincronizarPantalla(); }
-});
-
-window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 </script>
 </body>
 </html>
