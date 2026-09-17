@@ -133,8 +133,7 @@
 </div>
 
 <script>
-// URL actualizada con la nueva versión implementada
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwsXRt9m2AbYErtmOO8ZXNmxbkhVLIuYW61hD242R2VGI6Ac87-JxWH5SJOwlA929VN/exec";
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwLTm5kFSfWbVXjHvq_xaAULu7h1BQeBAJuTSAqXLr3CqOeUBSSsilqdlNkmUNHKGs/exec";
 let vistaActual = 'pendientes';
 let datosCache = [];
 let localOverrides = {}; 
@@ -152,7 +151,8 @@ window.onload = function() {
         document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
         inicializarUltimoAviso();
         cargarDatos();
-        setInterval(verificarMensajesSupervisor, 3500);
+        setInterval(verificarMensajesSupervisor, 4000);
+        setInterval(cargarDatos, 5000); // Intervalo optimizado a 5s para evitar saturación
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
@@ -203,7 +203,8 @@ function guardarUsuario() {
     
     inicializarUltimoAviso();
     cargarDatos();
-    setInterval(verificarMensajesSupervisor, 3500);
+    setInterval(verificarMensajesSupervisor, 4000);
+    setInterval(cargarDatos, 5000);
 }
 
 function cambiarUsuario() {
@@ -309,7 +310,6 @@ function renderizarTabla() {
     let filtrados = [];
     if (vistaActual === 'pendientes') {
         filtrados = datosCache.filter(row => {
-            // Filtro estricto que oculta cualquier registro resuelto de forma local o en servidor
             if (localOverrides[row.ID] && localOverrides[row.ID].Estado === "Resuelto") return false;
             if (String(row.Estado).trim().toLowerCase() === "resuelto") return false;
             
@@ -411,7 +411,7 @@ function llamarCliente(id) {
     }
 
     let urlLlamada = `${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${new Date().getTime()}`;
-    fetch(urlLlamada, { method: 'GET', mode: 'no-cors' });
+    fetch(urlLlamada).catch(err => console.error(err));
 }
 
 function marcarResuelto(id) {
@@ -422,7 +422,7 @@ function marcarResuelto(id) {
     let override = {
         Estado: "Resuelto",
         AtendidoPor: atendidoTexto,
-        timestamp: Date.now() + 45000 // Margen amplio para evitar rebotes de lectura
+        timestamp: Date.now() + 45000
     };
     localOverrides[id] = override;
 
@@ -432,16 +432,17 @@ function marcarResuelto(id) {
         renderizarTabla();
     }
 
-    try {
-        let urlResuelto = `${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${new Date().getTime()}`;
-        fetch(urlResuelto, { method: 'GET', mode: 'no-cors' });
-    } catch (e) {
-        alert("Error al marcar como resuelto.");
-        if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
-    }
+    let urlResuelto = `${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${new Date().getTime()}`;
+    fetch(urlResuelto)
+        .then(res => res.json())
+        .then(data => {
+            cargarDatos();
+        })
+        .catch(e => {
+            alert("Error al marcar como resuelto.");
+            if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
+        });
 }
-
-setInterval(cargarDatos, 3500);
 </script>
 </body>
 </html>
