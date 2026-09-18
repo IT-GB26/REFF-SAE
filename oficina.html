@@ -279,7 +279,8 @@ function verDetalles(id) {
 
     let padreVal = turno.padre ? `Padre: ${turno.padre}` : '';
     let madreVal = turno.madre ? `Madre: ${turno.madre}` : '';
-    let nombrePadresVal = [padreVal, madreVal].filter(Boolean).join(' | ') || turno.nombre_padres || 'No registrado';
+    let nombrePadresVal = [padreVal, madreVal].filter(Boolean).join(' | ') || turno.nombre_padres || turno.padres || turno.nombres_padres || 'No registrado';
+    let fechaNacimientoVal = turno.fecha_nacimiento || turno.fechaNacimiento || turno.nacimiento || 'No registrado';
 
     let contenido = `
         <div><span>ID de Turno:</span> ${turno.id || 'N/D'}</div>
@@ -287,6 +288,7 @@ function verDetalles(id) {
         <div><span>Nombres:</span> ${turno.nombres || 'N/D'}</div>
         <div><span>Apellidos:</span> ${turno.apellidos || 'N/D'}</div>
         <div><span>Género:</span> ${turno.genero || 'N/D'}</div>
+        <div><span>Fecha de Nacimiento:</span> ${fechaNacimientoVal}</div>
         <div><span>Nombre de los Padres:</span> ${nombrePadresVal}</div>
         <div><span>Sector:</span> ${turno.sector || 'N/D'}</div>
         <div><span>Estado:</span> ${turno.estado || 'N/D'}</div>
