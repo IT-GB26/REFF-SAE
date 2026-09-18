@@ -27,9 +27,27 @@
         .badge-pendiente { background: #fef9c3; color: #a16207; }
         .badge-llamado { background: #e0f2fe; color: #0369a1; }
         .badge-resuelto { background: #dcfce7; color: #166534; }
+        button.view-btn { background: #0284c7; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 12px; }
+
+        /* Estilos para la Modal de Detalles */
+        #modalDetalles { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-card { background: white; padding: 30px; border-radius: 12px; width: 450px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .modal-card h3 { margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .modal-body { font-size: 14px; color: #334155; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-body div span { font-weight: bold; color: #0f172a; }
+        .modal-close-btn { background: #64748b; color: white; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
+
+<!-- MODAL DE DETALLES -->
+<div id="modalDetalles">
+    <div class="modal-card">
+        <h3>Detalles del Turno</h3>
+        <div class="modal-body" id="contenidoModalDetalles"></div>
+        <button class="modal-close-btn" onclick="cerrarModalDetalles()">Cerrar</button>
+    </div>
+</div>
 
 <div class="container">
     <div class="header">
@@ -62,9 +80,16 @@
     <div class="card-table">
         <table>
             <thead>
-                <tr><th>Turno ID</th><th>Hora</th><th>Cliente</th><th>Estado</th><th>Responsable</th></tr>
+                <tr>
+                    <th>Turno ID</th>
+                    <th>Hora</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Responsable</th>
+                    <th style="text-align: center;">Acción</th>
+                </tr>
             </thead>
-            <tbody id="tablaSupervisor"><tr><td colspan="5" style="text-align: center;">Cargando datos...</td></tr></tbody>
+            <tbody id="tablaSupervisor"><tr><td colspan="6" style="text-align: center;">Cargando datos...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -104,22 +129,57 @@ async function cargarSupervisor() {
     let tbody = document.getElementById('tablaSupervisor');
     tbody.innerHTML = "";
     if (datosHoy.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">No hay registros hoy en ${sectorSeleccionado}.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">No hay registros hoy en ${sectorSeleccionado}.</td></tr>`;
         return;
     }
 
     datosHoy.forEach(row => {
         let tr = document.createElement('tr');
         let badgeClass = row.estado === 'Llamado' ? 'badge-llamado' : (row.estado === 'Resuelto' ? 'badge-resuelto' : 'badge-pendiente');
+        let turnoId = row.id;
+
         tr.innerHTML = `
-            <td><b>${row.id}</b></td>
+            <td><b>${turnoId}</b></td>
             <td>${new Date(row.fecha_hora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-            <td>${row.nombres} ${row.apellidos}</td>
+            <td>${row.nombres || ''} ${row.apellidos || ''}</td>
             <td><span class="badge ${badgeClass}">${row.estado}</span></td>
             <td>${row.atendido_por || (row.estado === 'Llamado' ? 'Ventanilla ' + row.ventanilla : 'Pendiente')}</td>
+            <td style="text-align: center;"><button class="view-btn" onclick="verDetalles('${turnoId}')">👁️ Ver</button></td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+function verDetalles(id) {
+    let turno = datosGlobalesSector.find(r => String(r.id) === String(id));
+    if (!turno) return;
+
+    let padreVal = turno.padre ? `Padre: ${turno.padre}` : '';
+    let madreVal = turno.madre ? `Madre: ${turno.madre}` : '';
+    let nombrePadresVal = [padreVal, madreVal].filter(Boolean).join(' | ') || turno.nombre_padres || turno.padres || turno.nombres_padres || 'No registrado';
+    let fechaNacimientoVal = turno.fecha_nacimiento || turno.fechaNacimiento || turno.nacimiento || 'No registrado';
+
+    let contenido = `
+        <div><span>ID de Turno:</span> ${turno.id || 'N/D'}</div>
+        <div><span>Fecha y Hora:</span> ${turno.fecha_hora ? new Date(turno.fecha_hora).toLocaleString() : 'N/D'}</div>
+        <div><span>Nombres:</span> ${turno.nombres || 'N/D'}</div>
+        <div><span>Apellidos:</span> ${turno.apellidos || 'N/D'}</div>
+        <div><span>Género:</span> ${turno.genero || 'N/D'}</div>
+        <div><span>Fecha de Nacimiento:</span> ${fechaNacimientoVal}</div>
+        <div><span>Nombre de los Padres:</span> ${nombrePadresVal}</div>
+        <div><span>Sector:</span> ${turno.sector || 'N/D'}</div>
+        <div><span>Estado:</span> ${turno.estado || 'N/D'}</div>
+        <div><span>Ventanilla:</span> ${turno.ventanilla || 'N/D'}</div>
+        <div><span>Atendido por:</span> ${turno.atendido_por || 'N/D'}</div>
+        <div><span>Comentarios:</span> ${turno.comentarios || 'Ninguno'}</div>
+    `;
+
+    document.getElementById('contenidoModalDetalles').innerHTML = contenido;
+    document.getElementById('modalDetalles').style.display = 'flex';
+}
+
+function cerrarModalDetalles() {
+    document.getElementById('modalDetalles').style.display = 'none';
 }
 
 async function enviarAvisoJefatura() {
@@ -137,7 +197,6 @@ async function enviarAvisoJefatura() {
     }]);
 
     if (!error) {
-        // Se limpia el campo de texto de forma silenciosa sin mostrar ningún "alert"
         document.getElementById('inputMensajeJefatura').value = "";
     } else {
         alert("Error al enviar el aviso: " + error.message);
