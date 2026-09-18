@@ -277,7 +277,7 @@ function verDetalles(id) {
     let turno = datosCache.find(r => String(r.id) === String(id));
     if (!turno) return;
 
-    let nombrePadresVal = turno.nombre_padres || turno.padres || 'N/D';
+    let nombrePadresVal = turno.nombre_padres || turno.padres || turno.nombres_padres || turno.nombre_de_los_padres || turno.padre || turno.madre || turno.nombre_padre || turno.nombre_madre || 'N/D';
 
     let contenido = `
         <div><span>ID de Turno:</span> ${turno.id || 'N/D'}</div>
