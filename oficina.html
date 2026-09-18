@@ -63,9 +63,7 @@
 <div id="modalDetalles">
     <div class="modal-card">
         <h3>Detalles del Turno</h3>
-        <div class="modal-body" id="contenidoModalDetalles">
-            <!-- Se llena dinámicamente -->
-        </div>
+        <div class="modal-body" id="contenidoModalDetalles"></div>
         <button class="modal-close-btn" onclick="cerrarModalDetalles()">Cerrar</button>
     </div>
 </div>
@@ -201,14 +199,8 @@ function mostrarAvisoEnPantalla(mensaje) {
     banner.classList.remove('atenuado');
     banner.style.display = 'block';
 
-    setTimeout(() => {
-        banner.classList.add('atenuado');
-    }, 5000);
-
-    setTimeout(() => {
-        banner.style.display = 'none';
-        banner.classList.remove('atenuado');
-    }, 10000);
+    setTimeout(() => { banner.classList.add('atenuado'); }, 5000);
+    setTimeout(() => { banner.style.display = 'none'; banner.classList.remove('atenuado'); }, 10000);
 }
 
 function cambiarVista(vista) {
@@ -224,7 +216,6 @@ function renderizarTabla() {
 
     let filtrados = datosCache.filter(row => {
         let estadoStr = String(row.estado || "").trim().toLowerCase();
-        
         if (vistaActual === 'pendientes') {
             return estadoStr === "pendiente" || estadoStr === "llamado";
         } else {
@@ -234,14 +225,12 @@ function renderizarTabla() {
 
     if (filtrados.length === 0) {
         let mensaje = vistaActual === 'pendientes' ? "No hay turnos activos en la cola." : "No hay registros resueltos.";
-        let colspan = 5;
-        tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:#64748b; padding: 30px;">${mensaje}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b; padding: 30px;">${mensaje}</td></tr>`;
         return;
     }
 
     filtrados.forEach(row => {
         let tr = document.createElement('tr');
-        let columnaAccion = '';
         let turnoId = row.id;
         let estadoStr = String(row.estado || "").trim().toLowerCase();
         let fechaHoraVal = row.fecha_hora;
@@ -250,6 +239,7 @@ function renderizarTabla() {
         let generoVal = row.genero || "N/D";
         let comentariosVal = row.comentarios || "Ninguno";
 
+        let columnaAccion = '';
         if (vistaActual === 'pendientes') {
             let botonLlamar = (estadoStr === "llamado") ? 
                 `<button class="called-btn" onclick="llamarCliente('${turnoId}')">🔄 Re-llamar</button>` : 
@@ -287,12 +277,15 @@ function verDetalles(id) {
     let turno = datosCache.find(r => String(r.id) === String(id));
     if (!turno) return;
 
+    let nombrePadresVal = turno.nombre_padres || turno.padres || 'N/D';
+
     let contenido = `
         <div><span>ID de Turno:</span> ${turno.id || 'N/D'}</div>
         <div><span>Fecha y Hora:</span> ${turno.fecha_hora ? new Date(turno.fecha_hora).toLocaleString() : 'N/D'}</div>
         <div><span>Nombres:</span> ${turno.nombres || 'N/D'}</div>
         <div><span>Apellidos:</span> ${turno.apellidos || 'N/D'}</div>
         <div><span>Género:</span> ${turno.genero || 'N/D'}</div>
+        <div><span>Nombre de los Padres:</span> ${nombrePadresVal}</div>
         <div><span>Sector:</span> ${turno.sector || 'N/D'}</div>
         <div><span>Estado:</span> ${turno.estado || 'N/D'}</div>
         <div><span>Ventanilla:</span> ${turno.ventanilla || 'N/D'}</div>
