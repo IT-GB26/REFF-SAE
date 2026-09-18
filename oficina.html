@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Oficinas - Control de Turnos (El Congo)</title>
+    <title>Panel de Oficinas v2 - Control de Turnos (El Congo)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
@@ -108,7 +108,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let vistaActual = 'pendientes';
 let datosCache = [];
-let usuarioActual = localStorage.getItem("agente_nombre_fijo_congo") || "";
+let usuarioActual = localStorage.getItem("agente_nombre_fijo_congo_v2") || "";
 let ventanillaFija = "3";
 let sectorFijo = "El Congo";
 
@@ -128,8 +128,8 @@ function guardarUsuario() {
     usuarioActual = input;
     ventanillaFija = "3";
 
-    localStorage.setItem("agente_nombre_fijo_congo", usuarioActual);
-    localStorage.setItem("agente_ventanilla_fija_congo", ventanillaFija);
+    localStorage.setItem("agente_nombre_fijo_congo_v2", usuarioActual);
+    localStorage.setItem("agente_ventanilla_fija_congo_v2", ventanillaFija);
 
     aplicarCredencialesUI();
     document.getElementById('loginOverlay').style.display = 'none';
@@ -143,8 +143,8 @@ function aplicarCredencialesUI() {
 }
 
 function cambiarUsuario() {
-    localStorage.removeItem("agente_nombre_fijo_congo");
-    localStorage.removeItem("agente_ventanilla_fija_congo");
+    localStorage.removeItem("agente_nombre_fijo_congo_v2");
+    localStorage.removeItem("agente_ventanilla_fija_congo_v2");
     document.getElementById('loginOverlay').style.display = 'flex';
 }
 
@@ -170,14 +170,14 @@ async function cargarDatos() {
 
 function suscripcionesTiempoReal() {
     supabaseClient
-        .channel('cambios-turnos-oficina-congo')
+        .channel('cambios-turnos-oficina-congo-v2')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos' }, payload => {
             cargarDatos();
         })
         .subscribe();
 
     supabaseClient
-        .channel('cambios-avisos-oficina-congo')
+        .channel('cambios-avisos-oficina-congo-v2')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'avisos' }, payload => {
             let aviso = payload.new;
             let sectorAviso = String(aviso.sector || "").trim().toLowerCase();
@@ -277,7 +277,9 @@ function verDetalles(id) {
     let turno = datosCache.find(r => String(r.id) === String(id));
     if (!turno) return;
 
-    let nombrePadresVal = turno.nombre_padres || turno.padres || turno.nombres_padres || turno.nombre_de_los_padres || turno.padre || turno.madre || turno.nombre_padre || turno.nombre_madre || 'N/D';
+    let padreVal = turno.padre ? `Padre: ${turno.padre}` : '';
+    let madreVal = turno.madre ? `Madre: ${turno.madre}` : '';
+    let nombrePadresVal = [padreVal, madreVal].filter(Boolean).join(' | ') || turno.nombre_padres || 'No registrado';
 
     let contenido = `
         <div><span>ID de Turno:</span> ${turno.id || 'N/D'}</div>
