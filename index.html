@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Recepción - Ingreso de Clientes</title>
+    <title>Recepción - Ingreso de Clientes (El Congo)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; gap: 20px; }
         .form-container { background: #ffffff; padding: 30px; border-radius: 20px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
@@ -15,7 +16,9 @@
         .s-info-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .s-nombre { font-size: 14px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
         .btn-ver-mini { background: #0284c7; color: white; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-ver-mini:hover { background: #0369a1; }
         .s-detalles { font-size: 11px; color: #64748b; }
+        
         .proximo-turno-box { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .proximo-turno-label { font-size: 13px; font-weight: 700; color: #166534; text-transform: uppercase; }
         .proximo-turno-num { font-size: 22px; font-weight: 900; color: #15803d; }
@@ -27,13 +30,35 @@
         label { font-weight: 700; color: #334155; display: block; margin-top: 6px; font-size: 11px; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 9px; margin-top: 3px; border: 1.5px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 13px; background: #f8fafc; }
         button[type="submit"] { background: #0284c7; color: white; padding: 12px; border: none; width: 100%; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+
+        #modalOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); z-index: 9999; display: none; justify-content: center; align-items: center; }
+        .modal-card { background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); animation: escalaModal 0.2s ease-in-out; }
+        @keyframes escalaModal { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-body p { margin: 8px 0; font-size: 15px; color: #334155; }
+        .modal-body b { color: #0f172a; }
+        .btn-cerrar-modal { background: #64748b; color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .btn-cerrar-modal:hover { background: #475569; }
     </style>
 </head>
 <body>
 
+<div id="modalOverlay">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="mIdTurno" style="margin:0; color:#0284c7; font-size: 22px;">Turno: --</h3>
+            <span id="mFechaHora" style="font-size: 13px; color: #64748b;">--</span>
+        </div>
+        <div class="modal-body" id="mContenidoDetalle"></div>
+        <button class="btn-cerrar-modal" onclick="cerrarModal()">Cerrar Vista</button>
+    </div>
+</div>
+
 <div class="form-container">
     <div class="logo-container"><img src="img/logo.png" alt="Logo Empresa"></div>
-    <h2>Registro de Nuevo Cliente</h2>
+    <h2>Registro de Nuevo Cliente (El Congo)</h2>
+
+    <input type="hidden" id="selectSectorRecripcion" value="El Congo">
 
     <div class="proximo-turno-box">
         <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
@@ -58,41 +83,76 @@
 <div class="sidebar-container">
     <div class="sidebar-title">Historial de Ingresos Hoy</div>
     <div class="sidebar-list" id="sidebarLista">
-        <div style="text-align: center; color: #94a3b8; margin-top: 50px; font-size: 13px;">No hay registros previos en esta sesión</div>
+        <div style="text-align: center; color: #94a3b8; margin-top: 50px; font-size: 13px;">Cargando registros...</div>
     </div>
 </div>
 
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxzQLuU0l38hJMN3egJFNAiW41ZmSrk5Og-gSmge000oey9GQokRH6I3i6DSL2X2rM/exec";
+const SUPABASE_URL = 'https://kuvdvvhcixkczqfrzqvj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1dmR2dmhjaXhrY3pxZnJ6cXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODIyMTAsImV4cCI6MjEwNTI1ODIxMH0.2UgHDjz1RMbFLyxSuETRPQxOa1IWou9etk35_nE6r1k';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let contadorTurnoLocal = 1;
+let registrosHoyMemoria = [];
 
-async function sincronizarSiguienteTurno() {
-    try {
-        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
-        let datos = await res.json();
-        let hoyStr = new Date().toLocaleDateString();
-        let maxNum = 0;
+async function calcularSiguienteTurno() {
+    let sectorActual = document.getElementById('selectSectorRecripcion').value;
+    
+    let dHoy = new Date();
+    let anio = dHoy.getFullYear();
+    let mes = String(dHoy.getMonth() + 1).padStart(2, '0');
+    let dia = String(dHoy.getDate()).padStart(2, '0');
+    let hoyStrLocal = `${anio}-${mes}-${dia}`;
 
-        datos.forEach(row => {
-            if (row.FechaHora) {
-                let d = new Date(row.FechaHora);
-                if (!isNaN(d.getTime()) && d.toLocaleDateString() === hoyStr) {
-                    let match = String(row.ID).match(/\d+/);
-                    if (match) {
-                        let num = parseInt(match[0], 10);
-                        if (num > maxNum) maxNum = num;
-                    }
-                }
+    let { data, error } = await supabaseClient
+        .from('turnos')
+        .select('*')
+        .eq('sector', sectorActual);
+
+    if (!error && data) {
+        registrosHoyMemoria = data;
+        let lista = document.getElementById('sidebarLista');
+        lista.innerHTML = "";
+
+        // Filtrar estrictamente los turnos que corresponden al día de hoy
+        let filtradosHoy = data.filter(row => {
+            if (!row.fecha_hora) return false;
+            let fechaRowLocal = row.fecha_hora.split('T')[0];
+            return fechaRowLocal === hoyStrLocal;
+        });
+
+        let maxNumHoy = 0;
+        filtradosHoy.forEach(row => {
+            let match = String(row.id).match(/\d+/);
+            if (match) {
+                let num = parseInt(match[0], 10);
+                if (num > maxNumHoy) maxNumHoy = num;
             }
         });
-        contadorTurnoLocal = maxNum + 1;
+
+        if (filtradosHoy.length === 0) {
+            lista.innerHTML = `<div style="text-align: center; color: #94a3b8; margin-top: 50px; font-size: 13px;">No hay registros previos hoy</div>`;
+            contadorTurnoLocal = 1;
+        } else {
+            filtradosHoy.sort((a, b) => {
+                let numA = parseInt(String(a.id).replace(/\D/g, '')) || 0;
+                let numB = parseInt(String(b.id).replace(/\D/g, '')) || 0;
+                return numB - numA;
+            });
+
+            filtradosHoy.forEach(row => {
+                agregarAHistorialLateral(row);
+            });
+
+            contadorTurnoLocal = maxNumHoy + 1;
+        }
+
         document.getElementById('lblSiguienteTurno').innerText = "A" + contadorTurnoLocal;
-    } catch(e) {}
+    }
 }
 
 window.onload = function() {
-    sincronizarSiguienteTurno();
-    setInterval(sincronizarSiguienteTurno, 6000);
+    calcularSiguienteTurno();
 };
 
 document.getElementById('registroForm').addEventListener('submit', async function(e) {
@@ -101,28 +161,35 @@ document.getElementById('registroForm').addEventListener('submit', async functio
     btn.innerText = "Registrando...";
     btn.disabled = true;
 
-    let datos = {
-        accion: "nuevo_registro",
+    let sectorActual = document.getElementById('selectSectorRecripcion').value;
+    
+    // Recalcular para asegurar que el ID sea el siguiente correcto del día
+    await calcularSiguienteTurno();
+    let idGenerado = "A" + contadorTurnoLocal;
+
+    // Objeto limpio asegurando estado 'Pendiente' y 'ultimo_llamado' en 0 o null
+    let nuevoRegistro = {
+        id: idGenerado,
+        sector: sectorActual,
+        fecha_hora: new Date().toISOString(),
         nombres: document.getElementById('nombres').value.trim(),
         apellidos: document.getElementById('apellidos').value.trim(),
         genero: document.getElementById('genero').value,
-        fechaNacimiento: document.getElementById('fechaNacimiento').value,
+        fecha_nacimiento: document.getElementById('fechaNacimiento').value,
         padre: document.getElementById('padre').value.trim(),
         madre: document.getElementById('madre').value.trim(),
-        lugarNacimiento: document.getElementById('lugarNacimiento').value.trim(),
-        comentarios: document.getElementById('comentarios').value.trim()
+        lugar_nacimiento: document.getElementById('lugarNacimiento').value.trim(),
+        comentarios: document.getElementById('comentarios').value.trim(),
+        estado: 'Pendiente',
+        ventanilla: '3',
+        ultimo_llamado: 0 
     };
 
-    try {
-        let res = await fetch(URL_WEB_APP, { method: 'POST', body: JSON.stringify(datos) });
-        let resultado = await res.json();
-        
-        let idGenerado = resultado.id || ("A" + contadorTurnoLocal);
-        contadorTurnoLocal++;
+    let { error } = await supabaseClient.from('turnos').insert([nuevoRegistro]);
+
+    if (!error) {
+        await calcularSiguienteTurno();
         document.getElementById('registroForm').reset();
-        
-        agregarAHistorialLateral({ ID: idGenerado, ...datos });
-        document.getElementById('lblSiguienteTurno').innerText = "A" + contadorTurnoLocal;
 
         btn.style.backgroundColor = "#16a34a";
         btn.innerText = `¡Guardado: ${idGenerado}!`;
@@ -132,24 +199,60 @@ document.getElementById('registroForm').addEventListener('submit', async functio
             btn.disabled = false;
             document.getElementById('nombres').focus();
         }, 800);
-    } catch (error) {
-        alert("Error al enviar los datos.");
+    } else {
+        alert("Error al registrar: " + error.message);
         btn.style.backgroundColor = "#0284c7";
         btn.innerText = "Guardar e Imprimir Turno";
         btn.disabled = false;
+        await calcularSiguienteTurno();
     }
 });
 
 function agregarAHistorialLateral(cliente) {
     let lista = document.getElementById('sidebarLista');
-    if (lista.innerHTML.includes("No hay registros")) lista.innerHTML = "";
+    if (lista.innerHTML.includes("Cargando") || lista.innerHTML.includes("No hay registros")) {
+        lista.innerHTML = "";
+    }
+    
     let card = document.createElement('div');
     card.className = 'sidebar-card';
     card.innerHTML = `
-        <div class="sidebar-card-header"><span class="s-id">${cliente.ID}</span><span class="s-detalles">${cliente.FechaNacimiento || ''}</span></div>
-        <div class="s-info-row"><div class="s-nombre">${cliente.Nombres} ${cliente.Apellidos}</div></div>
+        <div class="sidebar-card-header">
+            <span class="s-id">${cliente.id}</span>
+            <button class="btn-ver-mini" onclick="verDetalleCliente('${cliente.id}')">Ver</button>
+        </div>
+        <div class="s-info-row">
+            <div class="s-nombre">${cliente.nombres} ${cliente.apellidos}</div>
+        </div>
+        <div class="s-detalles">Nacimiento: ${cliente.fecha_nacimiento || 'N/D'}</div>
     `;
-    lista.prepend(card);
+    lista.appendChild(card);
+}
+
+function verDetalleCliente(id) {
+    let cliente = registrosHoyMemoria.find(r => r.id === id);
+    if (!cliente) return;
+
+    document.getElementById('mIdTurno').innerText = "Turno: " + cliente.id;
+    document.getElementById('mFechaHora').innerText = cliente.fecha_hora ? new Date(cliente.fecha_hora).toLocaleTimeString() : '';
+    
+    let contenido = `
+        <p><b>Nombres y Apellidos:</b> ${cliente.nombres} ${cliente.apellidos}</p>
+        <p><b>Género:</b> ${cliente.genero || 'N/D'}</p>
+        <p><b>Fecha de Nacimiento:</b> ${cliente.fecha_nacimiento || 'N/D'}</p>
+        <p><b>Lugar de Nacimiento:</b> ${cliente.lugar_nacimiento || 'N/D'}</p>
+        <p><b>Padre:</b> ${cliente.padre || 'N/D'}</p>
+        <p><b>Madre:</b> ${cliente.madre || 'N/D'}</p>
+        <p><b>Comentarios:</b> ${cliente.comentarios || 'Ninguno'}</p>
+        <p><b>Estado Actual:</b> <span style="color: #0284c7; font-weight: bold;">${cliente.estado}</span></p>
+    `;
+
+    document.getElementById('mContenidoDetalle').innerHTML = contenido;
+    document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function cerrarModal() {
+    document.getElementById('modalOverlay').style.display = 'none';
 }
 </script>
 </body>
