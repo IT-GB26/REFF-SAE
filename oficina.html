@@ -2,17 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Oficinas - Control de Turnos</title>
+    <title>Panel de Oficinas - Control de Turnos (El Congo)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
-        .header img { max-height: 55px; }
         .ventanilla-box { background: #e0f2fe; color: #0369a1; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        
+        /* Banner de Aviso de Jefatura */
+        #bannerAviso { display: none; background: #dc2626; color: white; padding: 20px; border-radius: 10px; text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4); animation: parpadear 1s infinite alternate; }
+        #bannerAviso.atenuado { background: #64748b !important; animation: none !important; color: #cbd5e1; }
+        @keyframes parpadear { from { opacity: 1; transform: scale(1); } to { opacity: 0.85; transform: scale(1.01); } }
+
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .login-card { background: white; padding: 40px; border-radius: 16px; width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-card input, .login-card select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
+        .login-card input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
         .login-card button { background: #0284c7; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .badge-fijo-ventanilla { background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 14px; border: 1px solid #7dd3fc; }
+        
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
         .tab-btn { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .tab-btn.active { background: #0284c7; }
@@ -35,28 +43,30 @@
 <div id="loginOverlay">
     <div class="login-card">
         <h2>Identificación de Agente</h2>
-        <p>Ingrese su nombre y asigne la ventanilla fija para esta PC.</p>
+        <p>Ingrese su nombre para iniciar la atención.</p>
         <input type="text" id="inputUsuario" placeholder="Ej: Lic. Carlos Pérez" autofocus>
-        <select id="selectVentanillaLogin">
-            <option value="1">Ventanilla 1</option><option value="2">Ventanilla 2</option>
-            <option value="3" selected>Ventanilla 3</option><option value="4">Ventanilla 4</option>
-        </select>
+        <div class="badge-fijo-ventanilla">📍 Ventanilla Asignada: 3</div>
         <button onclick="guardarUsuario()">Ingresar al Panel</button>
     </div>
 </div>
 
 <div class="container">
     <div class="header">
-        <img src="img/logo.png" alt="Logo">
-        <h2>Panel de Atención - Oficinas</h2>
-        <div class="ventanilla-box" id="lblVentanillaFija">Ventanilla Asignada: --</div>
+        <h2>Panel de Atención - Oficinas (El Congo)</h2>
+        <div class="ventanilla-box" id="lblVentanillaFija">Ventanilla Asignada: 3</div>
+    </div>
+
+    <!-- BANNER DE AVISO DE JEFATURA -->
+    <div id="bannerAviso">
+        <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">⚠️ Aviso Importante de Jefatura</div>
+        <div id="textoAvisoContenido">---</div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" id="btnPendientes" onclick="cambiarVista('pendientes')">Cola Activa (Hoy)</button>
+        <button class="tab-btn active" id="btnPendientes" onclick="cambiarVista('pendientes')">Cola Activa</button>
         <button class="tab-btn" id="btnAyer" onclick="cambiarVista('ayer')">Registros Resueltos</button>
         <button class="refresh-btn" onclick="cargarDatos()">Actualizar Datos</button>
-        <div class="user-tag">Agente: <b id="nombreAgenteSpan">---</b> <button onclick="cambiarUsuario()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-weight:bold;">[Cambiar]</button></div>
+        <div class="user-tag">Agente: <b id="nombreAgenteSpan">---</b> | <span>Sector: El Congo</span> <button onclick="cambiarUsuario()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-weight:bold;">[Cambiar]</button></div>
     </div>
 
     <table>
@@ -74,20 +84,21 @@
 </div>
 
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxzQLuU0l38hJMN3egJFNAiW41ZmSrk5Og-gSmge000oey9GQokRH6I3i6DSL2X2rM/exec";
+const SUPABASE_URL = 'https://kuvdvvhcixkczqfrzqvj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1dmR2dmhjaXhrY3pxZnJ6cXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODIyMTAsImV4cCI6MjEwNTI1ODIxMH0.2UgHDjz1RMbFLyxSuETRPQxOa1IWou9etk35_nE6r1k';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let vistaActual = 'pendientes';
 let datosCache = [];
-let usuarioActual = localStorage.getItem("agente_nombre_fijo") || "";
-let ventanillaFija = localStorage.getItem("agente_ventanilla_fija") || "3";
-let peticionEnCurso = false;
+let usuarioActual = localStorage.getItem("agente_nombre_fijo_congo") || "";
+let ventanillaFija = "3";
+let sectorFijo = "El Congo";
 
 window.onload = function() {
     if (usuarioActual) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
-        document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
+        aplicarCredencialesUI();
         cargarDatos();
-        setInterval(cargarDatos, 4000);
+        suscripcionesTiempoReal();
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
     }
@@ -97,33 +108,87 @@ function guardarUsuario() {
     let input = document.getElementById('inputUsuario').value.trim();
     if (!input) { alert("Por favor ingrese un nombre de agente válido."); return; }
     usuarioActual = input;
-    ventanillaFija = document.getElementById('selectVentanillaLogin').value;
-    localStorage.setItem("agente_nombre_fijo", usuarioActual);
-    localStorage.setItem("agente_ventanilla_fija", ventanillaFija);
-    document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
-    document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: " + ventanillaFija;
+    ventanillaFija = "3";
+
+    localStorage.setItem("agente_nombre_fijo_congo", usuarioActual);
+    localStorage.setItem("agente_ventanilla_fija_congo", ventanillaFija);
+
+    aplicarCredencialesUI();
     document.getElementById('loginOverlay').style.display = 'none';
     cargarDatos();
-    setInterval(cargarDatos, 4000);
+    suscripcionesTiempoReal();
+}
+
+function aplicarCredencialesUI() {
+    document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
+    document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: 3";
 }
 
 function cambiarUsuario() {
-    localStorage.removeItem("agente_nombre_fijo");
-    localStorage.removeItem("agente_ventanilla_fija");
+    localStorage.removeItem("agente_nombre_fijo_congo");
+    localStorage.removeItem("agente_ventanilla_fija_congo");
     document.getElementById('loginOverlay').style.display = 'flex';
 }
 
 async function cargarDatos() {
-    if (!usuarioActual || peticionEnCurso) return;
-    peticionEnCurso = true;
-    try {
-        let res = await fetch(URL_WEB_APP + "?t=" + new Date().getTime());
-        datosCache = await res.json();
-        renderizarTabla();
-    } catch (e) {
-    } finally {
-        peticionEnCurso = false;
+    if (!usuarioActual) return;
+    
+    let { data, error } = await supabaseClient
+        .from('turnos')
+        .select('*')
+        .eq('sector', sectorFijo)
+        .order('fecha_hora', { ascending: true });
+
+    if (error) {
+        console.error("Error al cargar turnos de Supabase:", error);
+        return;
     }
+
+    if (data) {
+        datosCache = data;
+        renderizarTabla();
+    }
+}
+
+function suscripcionesTiempoReal() {
+    supabaseClient
+        .channel('cambios-turnos-oficina-congo')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos' }, payload => {
+            cargarDatos();
+        })
+        .subscribe();
+
+    supabaseClient
+        .channel('cambios-avisos-oficina-congo')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'avisos' }, payload => {
+            let aviso = payload.new;
+            let sectorAviso = String(aviso.sector || "").trim().toLowerCase();
+            let ventanillaAviso = String(aviso.ventanilla || "").trim().toLowerCase();
+            let sectorLocal = sectorFijo.trim().toLowerCase();
+
+            if (sectorAviso === sectorLocal && (ventanillaAviso === ventanillaFija || ventanillaAviso === "todas" || ventanillaAviso === "todos")) {
+                mostrarAvisoEnPantalla(aviso.mensaje);
+            }
+        })
+        .subscribe();
+}
+
+function mostrarAvisoEnPantalla(mensaje) {
+    let banner = document.getElementById('bannerAviso');
+    let texto = document.getElementById('textoAvisoContenido');
+    
+    texto.innerText = mensaje;
+    banner.classList.remove('atenuado');
+    banner.style.display = 'block';
+
+    setTimeout(() => {
+        banner.classList.add('atenuado');
+    }, 5000);
+
+    setTimeout(() => {
+        banner.style.display = 'none';
+        banner.classList.remove('atenuado');
+    }, 10000);
 }
 
 function cambiarVista(vista) {
@@ -139,16 +204,17 @@ function renderizarTabla() {
     tbody.innerHTML = "";
 
     let filtrados = datosCache.filter(row => {
-        let esResueltoServidor = (String(row.Estado).trim().toLowerCase() === "resuelto");
+        let estadoStr = String(row.estado || "").trim().toLowerCase();
+        
         if (vistaActual === 'pendientes') {
-            return !esResueltoServidor && (row.Estado === "Pendiente" || row.Estado === "Llamado");
+            return estadoStr === "pendiente" || estadoStr === "llamado";
         } else {
-            return esResueltoServidor;
+            return estadoStr === "resuelto";
         }
     });
 
     if (filtrados.length === 0) {
-        let mensaje = vistaActual === 'pendientes' ? "No hay clientes activos en la cola." : "No hay registros resueltos.";
+        let mensaje = vistaActual === 'pendientes' ? "No hay turnos activos en la cola." : "No hay registros resueltos.";
         let colspan = vistaActual === 'pendientes' ? 5 : 4;
         tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:#64748b; padding: 30px;">${mensaje}</td></tr>`;
         return;
@@ -157,26 +223,33 @@ function renderizarTabla() {
     filtrados.forEach(row => {
         let tr = document.createElement('tr');
         let columnaAccion = '';
-        
+        let turnoId = row.id;
+        let estadoStr = String(row.estado || "").trim().toLowerCase();
+        let fechaHoraVal = row.fecha_hora;
+        let nombresVal = row.nombres || "";
+        let apellidosVal = row.apellidos || "";
+        let generoVal = row.genero || "N/D";
+        let comentariosVal = row.comentarios || "Ninguno";
+
         if (vistaActual === 'pendientes') {
-            let botonLlamar = (row.Estado === "Llamado") ? 
-                `<button class="called-btn" onclick="llamarCliente('${row.ID}')">🔄 Re-llamar</button>` : 
-                `<button class="action-btn" onclick="llamarCliente('${row.ID}')">📢 Llamar</button>`;
+            let botonLlamar = (estadoStr === "llamado") ? 
+                `<button class="called-btn" onclick="llamarCliente('${turnoId}')">🔄 Re-llamar</button>` : 
+                `<button class="action-btn" onclick="llamarCliente('${turnoId}')">📢 Llamar</button>`;
             
             columnaAccion = `
                 <td style="text-align: center;">
                     <div class="btn-accion-group">
                         ${botonLlamar}
-                        <button class="resolved-btn" id="btnResuelto_${row.ID}" onclick="marcarResuelto('${row.ID}')">✔️ Resuelto</button>
+                        <button class="resolved-btn" id="btnResuelto_${turnoId}" onclick="marcarResuelto('${turnoId}')">✔️ Resuelto</button>
                     </div>
                 </td>`;
         }
         
         tr.innerHTML = `
-            <td><b style="color: #0284c7; font-size: 15px;">${row.ID}</b></td>
-            <td style="color: #475569; font-size: 13px;">${row.FechaHora ? new Date(row.FechaHora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</td>
-            <td><div class="cliente-info">${row.Nombres} ${row.Apellidos}</div><div class="cliente-sub">Género: ${row.Genero}</div></td>
-            <td><div class="detalles-resumen"><span>Padre: ${row.Padre || 'N/D'} | Comentarios: ${row.Comentarios || 'Ninguno'}</span></div></td>
+            <td><b style="color: #0284c7; font-size: 15px;">${turnoId}</b></td>
+            <td style="color: #475569; font-size: 13px;">${fechaHoraVal ? new Date(fechaHoraVal).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</td>
+            <td><div class="cliente-info">${nombresVal} ${apellidosVal}</div><div class="cliente-sub">Género: ${generoVal}</div></td>
+            <td><div class="detalles-resumen"><span>Comentarios: ${comentariosVal}</span></div></td>
             ${columnaAccion}
         `;
         tbody.appendChild(tr);
@@ -184,11 +257,20 @@ function renderizarTabla() {
 }
 
 async function llamarCliente(id) {
-    try {
-        await fetch(`${URL_WEB_APP}?accion=llamar&id=${encodeURIComponent(id)}&ventanilla=${encodeURIComponent(ventanillaFija)}&t=${Date.now()}`);
-        await cargarDatos();
-    } catch(e) {
-        alert("Error al llamar al cliente.");
+    let marcaTiempoActual = Date.now();
+    let { error } = await supabaseClient
+        .from('turnos')
+        .update({ 
+            estado: 'Llamado', 
+            ventanilla: ventanillaFija, 
+            ultimo_llamado: marcaTiempoActual 
+        })
+        .eq('id', id);
+
+    if (error) {
+        alert("Error al llamar al turno: " + error.message);
+    } else {
+        cargarDatos();
     }
 }
 
@@ -198,18 +280,22 @@ async function marcarResuelto(id) {
     
     let atendidoTexto = usuarioActual + " (V." + ventanillaFija + ")";
     
-    try {
-        let res = await fetch(`${URL_WEB_APP}?accion=resuelto&id=${encodeURIComponent(id)}&usuario=${encodeURIComponent(atendidoTexto)}&t=${Date.now()}`);
-        let data = await res.json();
-        if (data.status === "ok") {
-            await cargarDatos();
-        } else {
-            alert("No se pudo actualizar el registro en el servidor.");
-            if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
-        }
-    } catch (e) {
-        alert("Error de conexión al marcar como resuelto.");
+    // Al resolver, limpiamos explícitamente el 'ultimo_llamado' asignándole null 
+    // para que la pantalla de sala de espera no interprete un cambio numérico como un nuevo llamado.
+    let { error } = await supabaseClient
+        .from('turnos')
+        .update({ 
+            estado: 'Resuelto', 
+            atendido_por: atendidoTexto,
+            ultimo_llamado: null 
+        })
+        .eq('id', id);
+
+    if (error) {
+        alert("No se pudo actualizar el registro.");
         if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
+    } else {
+        cargarDatos();
     }
 }
 </script>
