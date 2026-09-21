@@ -2,25 +2,19 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Oficinas v2 - Control de Turnos (El Congo)</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Panel de Oficinas - Control de Turnos</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+        .header img { max-height: 55px; }
         .ventanilla-box { background: #e0f2fe; color: #0369a1; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; }
-        
-        /* Banner de Aviso de Jefatura */
-        #bannerAviso { display: none; background: #dc2626; color: white; padding: 20px; border-radius: 10px; text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4); animation: parpadear 1s infinite alternate; }
-        #bannerAviso.atenuado { background: #64748b !important; animation: none !important; color: #cbd5e1; }
-        @keyframes parpadear { from { opacity: 1; transform: scale(1); } to { opacity: 0.85; transform: scale(1.01); } }
-
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .login-card { background: white; padding: 40px; border-radius: 16px; width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-card input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
+        .login-card h2 { color: #0f172a; margin-top: 0; margin-bottom: 10px; font-size: 22px; }
+        .login-card p { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        .login-card input, .login-card select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
         .login-card button { background: #0284c7; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .badge-fijo-ventanilla { background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 14px; border: 1px solid #7dd3fc; }
-        
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
         .tab-btn { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .tab-btn.active { background: #0284c7; }
@@ -36,15 +30,14 @@
         button.action-btn { background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
         button.called-btn { background: #ca8a04; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
         button.resolved-btn { background: #475569; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
-        button.view-btn { background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
-
-        /* Estilos para la Modal de Detalles */
-        #modalDetalles { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-card { background: white; padding: 30px; border-radius: 12px; width: 450px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
-        .modal-card h3 { margin-top: 0; color: #0284c7; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .modal-body { font-size: 14px; color: #334155; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 60vh; overflow-y: auto; }
-        .modal-body div span { font-weight: bold; color: #0f172a; }
-        .modal-close-btn { background: #64748b; color: white; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        button.view-btn { background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
+        
+        #modalDetalles { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); z-index: 9998; display: none; justify-content: center; align-items: center; }
+        .modal-card { background: white; padding: 30px; border-radius: 16px; width: 500px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .modal-card h3 { color: #0284c7; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .modal-body p { margin: 8px 0; font-size: 14px; color: #334155; }
+        .modal-body b { color: #0f172a; }
+        .modal-close { background: #64748b; color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -52,39 +45,39 @@
 <div id="loginOverlay">
     <div class="login-card">
         <h2>Identificación de Agente</h2>
-        <p>Ingrese su nombre para iniciar la atención.</p>
+        <p>Ingrese su nombre para iniciar la atención y asigne la ventanilla fija.</p>
         <input type="text" id="inputUsuario" placeholder="Ej: Lic. Carlos Pérez" autofocus>
-        <div class="badge-fijo-ventanilla">📍 Ventanilla Asignada: 3</div>
+        <select id="selectVentanillaLogin">
+            <option value="1">Ventanilla 1</option>
+            <option value="2">Ventanilla 2</option>
+            <option value="3" selected>Ventanilla 3</option>
+            <option value="4">Ventanilla 4</option>
+        </select>
         <button onclick="guardarUsuario()">Ingresar al Panel</button>
     </div>
 </div>
 
-<!-- MODAL DE DETALLES -->
 <div id="modalDetalles">
     <div class="modal-card">
         <h3>Detalles del Turno</h3>
-        <div class="modal-body" id="contenidoModalDetalles"></div>
-        <button class="modal-close-btn" onclick="cerrarModalDetalles()">Cerrar</button>
+        <div class="modal-body" id="contenidoModal"></div>
+        <button class="modal-close" onclick="cerrarModal()">Cerrar</button>
     </div>
 </div>
 
 <div class="container">
     <div class="header">
-        <h2>Panel de Atención - Oficinas (El Congo)</h2>
-        <div class="ventanilla-box" id="lblVentanillaFija">Ventanilla Asignada: 3</div>
-    </div>
-
-    <!-- BANNER DE AVISO DE JEFATURA -->
-    <div id="bannerAviso">
-        <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">⚠️ Aviso Importante de Jefatura</div>
-        <div id="textoAvisoContenido">---</div>
+        <img src="img/logo.png" alt="Logo">
+        <h2>Panel de Atención - Oficinas</h2>
+        <div class="ventanilla-box" id="lblVentanillaFija">Ventanilla Asignada: --</div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" id="btnPendientes" onclick="cambiarVista('pendientes')">Cola Activa</button>
+        <button class="tab-btn active" id="btnPendientes" onclick="cambiarVista('pendientes')">Cola Activa (Hoy)</button>
         <button class="tab-btn" id="btnAyer" onclick="cambiarVista('ayer')">Registros Resueltos</button>
-        <button class="refresh-btn" onclick="cargarDatos()">Actualizar Datos</button>
-        <div class="user-tag">Agente: <b id="nombreAgenteSpan">---</b> | <span>Sector: El Congo</span> <button onclick="cambiarUsuario()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-weight:bold;">[Cambiar]</button></div>
+        
+        <select id="filtroFechaResueltos" onchange="renderizarTabla()" style="display:none;padding:9px 12px;border:1px solid #cbd5e1;border-radius:6px;background:white;"><option value="hoy">Hoy</option><option value="ayer">Ayer</option><option value="7dias">Últimos 7 días</option><option value="todos">Todos</option></select>
+<div class="user-tag">Agente: <b id="nombreAgenteSpan">---</b> <button onclick="cambiarUsuario()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-weight:bold;">[Cambiar]</button></div>
     </div>
 
     <table>
@@ -102,261 +95,249 @@
 </div>
 
 <script>
-const SUPABASE_URL = 'https://kuvdvvhcixkczqfrzqvj.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1dmR2dmhjaXhrY3pxZnJ6cXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2ODIyMTAsImV4cCI6MjEwNTI1ODIxMH0.2UgHDjz1RMbFLyxSuETRPQxOa1IWou9etk35_nE6r1k';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let vistaActual = 'pendientes';
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbznHSwy_Rujdv5En5GZRqr4TrwS_i86jVmLjsr5fsk2y6CGFsHDal1l_Z37g5PI3-XU/exec";
+const CACHE_KEY = 'colas_oficina_datos_v2';
+const CACHE_ACCIONES = 'colas_oficina_acciones_pendientes_v3'; 
+let vistaActual = 'pendientes'; 
 let datosCache = [];
-let usuarioActual = localStorage.getItem("agente_nombre_fijo_congo_v2") || "";
-let ventanillaFija = "3";
-let sectorFijo = "El Congo";
+let usuarioActual = ''; 
+let ventanillaFija = '3'; 
+let peticionEnCurso = false;
+let accionEnCurso = false;
+let accionesPendientes = [];
+let conteoRellamadas = {};
+try { conteoRellamadas = JSON.parse(localStorage.getItem('conteo_rellamadas_v1') || '{}'); } catch(e) { conteoRellamadas={}; }
+const canalTurnos = null; // Multi-PC: comunicación real se confirma por Apps Script.
+try { accionesPendientes = JSON.parse(localStorage.getItem(CACHE_ACCIONES) || '[]'); } catch(e) { accionesPendientes=[]; }
+let flushAccionesActivo=false;
+function guardarAcciones(){ try{localStorage.setItem(CACHE_ACCIONES,JSON.stringify(accionesPendientes));}catch(e){} }
+function tokenAccion(){return 'of-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);}
+function encolarAccion(a){accionesPendientes.push(a);guardarAcciones();setTimeout(enviarAccionesPendientes,0);}
+async function enviarAccionesPendientes(){
+ if(flushAccionesActivo||!accionesPendientes.length||!navigator.onLine)return; flushAccionesActivo=true;
+ try{
+  const a=accionesPendientes[0]; let url=URL_WEB_APP+'?accion='+encodeURIComponent(a.accion)+'&uid='+encodeURIComponent(a.uid)+'&requestId='+encodeURIComponent(a.token)+'&t='+Date.now();
+  if(a.ventanilla) url+='&ventanilla='+encodeURIComponent(a.ventanilla); if(a.usuario) url+='&usuario='+encodeURIComponent(a.usuario);
+  const ctrl=new AbortController(); const tm=setTimeout(()=>ctrl.abort(),10000); let r; try{r=await fetch(url,{cache:'no-store',signal:ctrl.signal});}finally{clearTimeout(tm);} if(!r.ok)throw new Error('HTTP '+r.status); const j=await r.json(); if(!j||j.status!=='ok')throw new Error((j&&j.message)||'No confirmado');
+  accionesPendientes.shift();guardarAcciones(); if(accionesPendientes.length)setTimeout(enviarAccionesPendientes,0);
+ }catch(e){setTimeout(enviarAccionesPendientes,1500)} finally{flushAccionesActivo=false;}
+}
 
-window.onload = function() {
-    if (usuarioActual) {
-        aplicarCredencialesUI();
-        cargarDatos();
-        suscripcionesTiempoReal();
-        iniciarRespaldoAntivirus(); // <-- Respaldo automático anti-antivirus
-    } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
-    }
+function leerCache(){
+    try {
+        datosCache = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+        if(!Array.isArray(datosCache)) datosCache = [];
+    } catch(e) { datosCache = []; }
+}
+
+function guardarCache(){
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(datosCache)); } catch(e) {}
+}
+
+window.onload = function(){ 
+    leerCache(); 
+    renderizarTabla(); 
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('inputUsuario').focus();
 };
 
-function guardarUsuario() {
+function guardarUsuario(){
     let input = document.getElementById('inputUsuario').value.trim();
-    if (!input) { alert("Por favor ingrese un nombre de agente válido."); return; }
-    usuarioActual = input;
-    ventanillaFija = "3";
-
-    localStorage.setItem("agente_nombre_fijo_congo_v2", usuarioActual);
-    localStorage.setItem("agente_ventanilla_fija_congo_v2", ventanillaFija);
-
-    aplicarCredencialesUI();
-    document.getElementById('loginOverlay').style.display = 'none';
-    cargarDatos();
-    suscripcionesTiempoReal();
-    iniciarRespaldoAntivirus(); // <-- Respaldo automático anti-antivirus
-}
-
-function aplicarCredencialesUI() {
-    document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
-    document.getElementById('lblVentanillaFija').innerText = "Ventanilla Asignada: 3";
-}
-
-function cambiarUsuario() {
-    localStorage.removeItem("agente_nombre_fijo_congo_v2");
-    localStorage.removeItem("agente_ventanilla_fija_congo_v2");
-    document.getElementById('loginOverlay').style.display = 'flex';
-}
-
-async function cargarDatos() {
-    if (!usuarioActual) return;
-    
-    // Se añade parámetro de tiempo único para evitar que el antivirus o navegador guarden caché en la petición HTTP
-    let { data, error } = await supabaseClient
-        .from('turnos')
-        .select('*')
-        .eq('sector', sectorFijo)
-        .order('fecha_hora', { ascending: true });
-
-    if (error) {
-        console.error("Error al cargar turnos de Supabase:", error);
+    if(!input){
+        alert('Por favor ingrese un nombre de agente válido.');
         return;
     }
-
-    if (data) {
-        datosCache = data;
-        renderizarTabla();
-    }
-}
-
-// Sistema de respaldo automático por si el antivirus bloquea los WebSockets en tiempo real
-function iniciarRespaldoAntivirus() {
-    setInterval(() => {
-        if (usuarioActual) {
-            cargarDatos();
-        }
-    }, 4000); // Consulta la base de datos cada 4 segundos de forma transparente
-}
-
-function suscripcionesTiempoReal() {
-    supabaseClient
-        .channel('cambios-turnos-oficina-congo-v2')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos' }, payload => {
-            cargarDatos();
-        })
-        .subscribe();
-
-    supabaseClient
-        .channel('cambios-avisos-oficina-congo-v2')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'avisos' }, payload => {
-            let aviso = payload.new;
-            let sectorAviso = String(aviso.sector || "").trim().toLowerCase();
-            let ventanillaAviso = String(aviso.ventanilla || "").trim().toLowerCase();
-            let sectorLocal = sectorFijo.trim().toLowerCase();
-
-            if (sectorAviso === sectorLocal && (ventanillaAviso === ventanillaFija || ventanillaAviso === "todas" || ventanillaAviso === "todos")) {
-                mostrarAvisoEnPantalla(aviso.mensaje);
-            }
-        })
-        .subscribe();
-}
-
-function mostrarAvisoEnPantalla(mensaje) {
-    let banner = document.getElementById('bannerAviso');
-    let texto = document.getElementById('textoAvisoContenido');
+    usuarioActual = input;
+    ventanillaFija = document.getElementById('selectVentanillaLogin').value;
     
-    texto.innerText = mensaje;
-    banner.classList.remove('atenuado');
-    banner.style.display = 'block';
-
-    setTimeout(() => { banner.classList.add('atenuado'); }, 5000);
-    setTimeout(() => { banner.style.display = 'none'; banner.classList.remove('atenuado'); }, 10000);
+    document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
+    document.getElementById('lblVentanillaFija').innerText = 'Ventanilla Asignada: ' + ventanillaFija;
+    document.getElementById('loginOverlay').style.display = 'none';
+    cargarDatos();
+    enviarAccionesPendientes();
+    setInterval(cargarDatos, 1500);
 }
 
-function cambiarVista(vista) {
+function cambiarUsuario(){
+    usuarioActual = '';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('inputUsuario').value = '';
+    document.getElementById('inputUsuario').focus();
+}
+
+async function cargarDatos(){
+    if(!usuarioActual || peticionEnCurso || accionEnCurso || !navigator.onLine) return;
+    peticionEnCurso = true;
+    try {
+        const ctrlEstado=new AbortController(); const tmEstado=setTimeout(()=>ctrlEstado.abort(),4500); let res; try { res=await fetch(URL_WEB_APP + '?accion=estado&t=' + Date.now(), {cache:'no-store',signal:ctrlEstado.signal}); } finally { clearTimeout(tmEstado); }
+        if(!res.ok) throw new Error();
+        let j = await res.json();
+        const servidor = Array.isArray(j) ? j : (j.datos || []);
+        // No permitir que una lectura atrasada revierta una acción local pendiente.
+        const pendientesPorUid = new Map(accionesPendientes.map(a=>[String(a.uid),a]));
+        datosCache = servidor.map(r=>{
+            const a=pendientesPorUid.get(String(r.UID||''));
+            if(!a) return r;
+            const x={...r};
+            if(a.accion==='llamar'||a.accion==='rellamar'){x.Estado='Llamado';x.Ventanilla=a.ventanilla||x.Ventanilla;x.UltimoLlamado=a.creado||Date.now();x.AtendidoPor=a.usuario||x.AtendidoPor;}
+            if(a.accion==='resuelto'){x.Estado='Resuelto';x.AtendidoPor=a.usuario||x.AtendidoPor;}
+            return x;
+        });
+        guardarCache();
+        renderizarTabla();
+    } catch(e) {} finally { peticionEnCurso = false; }
+}
+
+function cambiarVista(vista){
     vistaActual = vista;
     document.getElementById('btnPendientes').className = vista === 'pendientes' ? 'tab-btn active' : 'tab-btn';
     document.getElementById('btnAyer').className = vista === 'ayer' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('thAccion').style.display = vista === 'pendientes' ? 'table-cell' : 'none'; const ff=document.getElementById('filtroFechaResueltos'); if(ff) ff.style.display=vista==='ayer'?'inline-block':'none';
     renderizarTabla();
 }
 
-function renderizarTabla() {
+function renderizarTabla(){
     let tbody = document.getElementById('tablaCola');
-    tbody.innerHTML = "";
-
+    tbody.innerHTML = '';
     let filtrados = datosCache.filter(row => {
-        let estadoStr = String(row.estado || "").trim().toLowerCase();
-        if (vistaActual === 'pendientes') {
-            return estadoStr === "pendiente" || estadoStr === "llamado";
-        } else {
-            return estadoStr === "resuelto";
-        }
+        let res = String(row.Estado).trim().toLowerCase() === 'resuelto';
+        return vistaActual === 'pendientes' ? !res && (row.Estado === 'Pendiente' || row.Estado === 'Llamado') : res;
     });
-
-    if (filtrados.length === 0) {
-        let mensaje = vistaActual === 'pendientes' ? "No hay turnos activos en la cola." : "No hay registros resueltos.";
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b; padding: 30px;">${mensaje}</td></tr>`;
+    if(vistaActual==='ayer'){
+      const tipo=(document.getElementById('filtroFechaResueltos')||{}).value||'hoy';
+      const ahora=new Date(), inicio=new Date(ahora.getFullYear(),ahora.getMonth(),ahora.getDate());
+      filtrados=filtrados.filter(r=>{const f=new Date(r.FechaHora);if(isNaN(f))return false;if(tipo==='todos')return true;if(tipo==='hoy')return f>=inicio;if(tipo==='ayer'){const a=new Date(inicio);a.setDate(a.getDate()-1);return f>=a&&f<inicio;}if(tipo==='7dias'){const d=new Date(inicio);d.setDate(d.getDate()-6);return f>=d;}return true;});
+      filtrados.sort((a,b)=>new Date(b.FechaHora||0)-new Date(a.FechaHora||0));
+    }
+    
+    if(!filtrados.length){
+        let mensaje = vistaActual === 'pendientes' ? 'No hay clientes activos en la cola.' : 'No hay registros resueltos.';
+        tbody.innerHTML = `<tr><td colspan="${vistaActual === 'pendientes' ? 5 : 4}" style="text-align:center; color:#64748b; padding: 30px;">${mensaje}</td></tr>`;
         return;
     }
-
+    
     filtrados.forEach(row => {
-        let tr = document.createElement('tr');
-        let turnoId = row.id;
-        let estadoStr = String(row.estado || "").trim().toLowerCase();
-        let fechaHoraVal = row.fecha_hora;
-        let nombresVal = row.nombres || "";
-        let apellidosVal = row.apellidos || "";
-        let generoVal = row.genero || "N/D";
-        let comentariosVal = row.comentarios || "Ninguno";
+        let tr = document.createElement('tr'), accion = '';
+        let btnVer = `<button class="view-btn" onclick="verDetalles('${row.UID}')">👁️ Ver</button>`;
 
-        let columnaAccion = '';
-        if (vistaActual === 'pendientes') {
-            let botonLlamar = (estadoStr === "llamado") ? 
-                `<button class="called-btn" onclick="llamarCliente('${turnoId}')">🔄 Re-llamar</button>` : 
-                `<button class="action-btn" onclick="llamarCliente('${turnoId}')">📢 Llamar</button>`;
-            
-            columnaAccion = `
-                <td style="text-align: center;">
-                    <div class="btn-accion-group">
-                        ${botonLlamar}
-                        <button class="resolved-btn" id="btnResuelto_${turnoId}" onclick="marcarResuelto('${turnoId}')">✔️ Resuelto</button>
-                        <button class="view-btn" onclick="verDetalles('${turnoId}')">👁️ Ver</button>
-                    </div>
-                </td>`;
+        if(vistaActual === 'pendientes'){
+            let llamar = row.Estado === 'Llamado'
+                ? `<button class="called-btn" id="btnLlamar_${row.UID}" onclick="llamarCliente('${row.UID}')">🔄 Re-llamar${conteoRellamadas[row.UID] ? ' ('+conteoRellamadas[row.UID]+')' : ''}</button>`
+                : `<button class="action-btn" id="btnLlamar_${row.UID}" onclick="llamarCliente('${row.UID}')">📢 Llamar</button>`;
+            accion = `<td style="text-align: center;"><div class="btn-accion-group">${btnVer}${llamar}<button class="resolved-btn" id="btnResuelto_${row.UID}" onclick="marcarResuelto('${row.UID}')">✔️ Resuelto</button></div></td>`;
         } else {
-            columnaAccion = `
-                <td style="text-align: center;">
-                    <div class="btn-accion-group">
-                        <button class="view-btn" onclick="verDetalles('${turnoId}')">👁️ Ver</button>
-                    </div>
-                </td>`;
+            accion = `<td style="text-align: center;">${btnVer}</td>`;
         }
-        
-        tr.innerHTML = `
-            <td><b style="color: #0284c7; font-size: 15px;">${turnoId}</b></td>
-            <td style="color: #475569; font-size: 13px;">${fechaHoraVal ? new Date(fechaHoraVal).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</td>
-            <td><div class="cliente-info">${nombresVal} ${apellidosVal}</div><div class="cliente-sub">Género: ${generoVal}</div></td>
-            <td><div class="detalles-resumen"><span>Comentarios: ${comentariosVal}</span></div></td>
-            ${columnaAccion}
-        `;
+
+        tr.innerHTML = `<td><b style="color: #0284c7; font-size: 15px;">${row.ID}</b></td><td style="color: #475569; font-size: 13px;">${row.FechaHora ? new Date(row.FechaHora).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : ''}</td><td><div class="cliente-info">${row.Nombres} ${row.Apellidos}</div><div class="cliente-sub">Género: ${row.Genero}</div></td><td><div class="detalles-resumen"><span>Padre: ${row.Padre || 'N/D'} | Comentarios: ${row.Comentarios || 'Ninguno'}</span></div></td>${accion}`;
         tbody.appendChild(tr);
     });
 }
 
-function verDetalles(id) {
-    let turno = datosCache.find(r => String(r.id) === String(id));
-    if (!turno) return;
+function verDetalles(uid){
+    let row = datosCache.find(x => String(x.UID) === String(uid));
+    if(!row) return;
 
-    let padreVal = turno.padre ? `Padre: ${turno.padre}` : '';
-    let madreVal = turno.madre ? `Madre: ${turno.madre}` : '';
-    let nombrePadresVal = [padreVal, madreVal].filter(Boolean).join(' | ') || turno.nombre_padres || turno.padres || turno.nombres_padres || 'No registrado';
-    let fechaNacimientoVal = turno.fecha_nacimiento || turno.fechaNacimiento || turno.nacimiento || 'No registrado';
+    let fechaNacLimpia = row.FechaNacimiento ? String(row.FechaNacimiento).split('T')[0] : '';
 
-    let contenido = `
-        <div><span>ID de Turno:</span> ${turno.id || 'N/D'}</div>
-        <div><span>Fecha y Hora:</span> ${turno.fecha_hora ? new Date(turno.fecha_hora).toLocaleString() : 'N/D'}</div>
-        <div><span>Nombres:</span> ${turno.nombres || 'N/D'}</div>
-        <div><span>Apellidos:</span> ${turno.apellidos || 'N/D'}</div>
-        <div><span>Género:</span> ${turno.genero || 'N/D'}</div>
-        <div><span>Fecha de Nacimiento:</span> ${fechaNacimientoVal}</div>
-        <div><span>Nombre de los Padres:</span> ${nombrePadresVal}</div>
-        <div><span>Sector:</span> ${turno.sector || 'N/D'}</div>
-        <div><span>Estado:</span> ${turno.estado || 'N/D'}</div>
-        <div><span>Ventanilla:</span> ${turno.ventanilla || 'N/D'}</div>
-        <div><span>Atendido por:</span> ${turno.atendido_por || 'N/D'}</div>
-        <div><span>Comentarios:</span> ${turno.comentarios || 'Ninguno'}</div>
+    let html = `
+        <p><b>ID de Turno:</b> ${row.ID}</p>
+        <p><b>Fecha y Hora:</b> ${row.FechaHora ? new Date(row.FechaHora).toLocaleString() : ''}</p>
+        <p><b>Nombres:</b> ${row.Nombres || ''}</p>
+        <p><b>Apellidos:</b> ${row.Apellidos || ''}</p>
+        <p><b>Género:</b> ${row.Genero || ''}</p>
+        <p><b>Fecha de Nacimiento:</b> ${fechaNacLimpia}</p>
+        <p><b>Padre:</b> ${row.Padre || 'N/D'}</p>
+        <p><b>Madre:</b> ${row.Madre || 'N/D'}</p>
+        <p><b>Lugar de Nacimiento:</b> ${row.LugarNacimiento || ''}</p>
+        <p><b>Comentarios:</b> ${row.Comentarios || 'Ninguno'}</p>
     `;
-
-    document.getElementById('contenidoModalDetalles').innerHTML = contenido;
+    document.getElementById('contenidoModal').innerHTML = html;
     document.getElementById('modalDetalles').style.display = 'flex';
 }
 
-function cerrarModalDetalles() {
+function cerrarModal(){
     document.getElementById('modalDetalles').style.display = 'none';
 }
 
-async function llamarCliente(id) {
-    let marcaTiempoActual = Date.now();
-    let { error } = await supabaseClient
-        .from('turnos')
-        .update({ 
-            estado: 'Llamado', 
-            ventanilla: ventanillaFija, 
-            ultimo_llamado: marcaTiempoActual 
-        })
-        .eq('id', id);
+function llamarCliente(uid){
+    const row = datosCache.find(x => String(x.UID || '') === String(uid));
+    if(!row){ alert('No se encontró el registro seleccionado.'); return; }
 
-    if (error) {
-        alert("Error al llamar al turno: " + error.message);
-    } else {
-        await cargarDatos(); // Refresco inmediato forzado
+    const yaLlamado = String(row.Estado || '').trim().toLowerCase() === 'llamado';
+    const accion = yaLlamado ? 'rellamar' : 'llamar';
+    const ahora = Date.now();
+    const atendido = usuarioActual+' (V.'+ventanillaFija+')';
+
+    if(yaLlamado){
+        conteoRellamadas[uid] = Number(conteoRellamadas[uid]||0)+1;
+        try{localStorage.setItem('conteo_rellamadas_v1',JSON.stringify(conteoRellamadas));}catch(e){}
     }
+
+    // Cambio visual INMEDIATO, antes de esperar Internet/Google.
+    row.Estado='Llamado';
+    row.Ventanilla=ventanillaFija;
+    row.UltimoLlamado=ahora;
+    row.AtendidoPor=atendido;
+    guardarCache();
+    renderizarTabla();
+
+    const btn=document.getElementById('btnLlamar_'+uid);
+    if(btn){
+        const original=btn.innerHTML;
+        btn.innerHTML='🔊 ENVIADO ✓';
+        btn.disabled=true;
+        setTimeout(()=>{btn.disabled=false; renderizarTabla();},650);
+    }
+
+    // Canal instantáneo si Pantalla y Oficinas están abiertos en el mismo equipo/origen.
+    const evento={tipo:'llamada',uid:String(uid),id:row.ID,ventanilla:String(ventanillaFija),ultimoLlamado:ahora};
+    try{ localStorage.setItem('turnos_evento_instantaneo_v1',JSON.stringify(evento)); }catch(e){}
+    try{ if(canalTurnos) canalTurnos.postMessage(evento); }catch(e){}
+
+    // Persistencia normal en Google Apps Script.
+    encolarAccion({
+        token:tokenAccion(),accion,uid:String(uid),
+        ventanilla:String(ventanillaFija),
+        usuario:atendido,creado:ahora
+    });
 }
 
-async function marcarResuelto(id) {
-    let btn = document.getElementById(`btnResuelto_${id}`);
-    if (btn) { btn.innerText = "Guardando..."; btn.disabled = true; }
-    
-    let atendidoTexto = usuarioActual + " (V." + ventanillaFija + ")";
-    
-    let { error } = await supabaseClient
-        .from('turnos')
-        .update({ 
-            estado: 'Resuelto', 
-            atendido_por: atendidoTexto,
-            ultimo_llamado: null 
-        })
-        .eq('id', id);
-
-    if (error) {
-        alert("No se pudo actualizar el registro.");
-        if (btn) { btn.innerText = "✔️ Resuelto"; btn.disabled = false; }
-    } else {
-        await cargarDatos(); // Refresco inmediato forzado
-    }
+function marcarResuelto(uid){
+    const row = datosCache.find(x => String(x.UID || '') === String(uid));
+    if(!row){ alert('No se encontró el registro seleccionado.'); return; }
+    // Sin rebote: desaparece de la cola una sola vez y queda persistido localmente.
+    row.Estado='Resuelto'; row.AtendidoPor=usuarioActual+' (V.'+ventanillaFija+')';
+    guardarCache(); renderizarTabla();
+    encolarAccion({token:tokenAccion(),accion:'resuelto',uid:String(uid),usuario:row.AtendidoPor,creado:Date.now()});
 }
+
+window.addEventListener('online', ()=>{enviarAccionesPendientes(); setTimeout(cargarDatos,300);});
+document.addEventListener('visibilitychange', () => {
+    if(!document.hidden){ leerCache(); renderizarTabla(); cargarDatos(); }
+});
+
+let consultaMensajeActiva=false;
+async function consultarMensajesOficina(){
+ if(!usuarioActual||!ventanillaFija||consultaMensajeActiva||!navigator.onLine)return;
+ consultaMensajeActiva=true;const c=new AbortController(),tm=setTimeout(()=>c.abort(),3500);
+ try{
+  const r=await fetch(URL_WEB_APP+'?accion=mensajes&ventanilla='+encodeURIComponent(ventanillaFija)+'&t='+Date.now(),{cache:'no-store',signal:c.signal});
+  if(!r.ok)return;const j=await r.json();
+  if(j&&j.status==='ok'&&Array.isArray(j.mensajes)){
+   for(const m of j.mensajes){
+    if(!m||!m.id)continue; mostrarAvisoJefatura(m.mensaje||'');
+    try{await fetch(URL_WEB_APP+'?accion=ack_mensaje&id='+encodeURIComponent(m.id)+'&t='+Date.now(),{cache:'no-store'});}catch(e){}
+   }
+  }
+ }catch(e){}finally{clearTimeout(tm);consultaMensajeActiva=false;}
+}
+function mostrarAvisoJefatura(txt){
+ let d=document.getElementById('avisoJefatura');
+ if(!d){d=document.createElement('div');d.id='avisoJefatura';d.style.cssText='position:fixed;right:20px;bottom:20px;z-index:10000;background:#0f172a;color:white;padding:20px 24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:460px;font-weight:700;font-size:17px';document.body.appendChild(d);}
+ d.textContent='Jefatura: '+txt;d.style.display='block';clearTimeout(d._tm);d._tm=setTimeout(()=>d.style.display='none',15000);
+}
+setInterval(consultarMensajesOficina,2000);
 </script>
 </body>
 </html>
