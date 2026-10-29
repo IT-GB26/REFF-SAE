@@ -2,187 +2,630 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Recepción - Ingreso de Clientes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepción - Registro Familiar (A) y Bienes Municipales (B)</title>
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; gap: 20px; }
-        .form-container { background: #ffffff; padding: 30px; border-radius: 20px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
-        .sidebar-container { background: #ffffff; padding: 20px; border-radius: 20px; width: 340px; height: 620px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); display: flex; flex-direction: column; box-sizing: border-box; }
-        .sidebar-title { font-size: 15px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 12px; text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
-        .sidebar-list { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
-        .sidebar-card { background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
-        .sidebar-card-header { display: flex; justify-content: space-between; align-items: center; }
-        .s-id { font-size: 18px; font-weight: 900; color: #0284c7; }
-        .s-info-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .s-nombre { font-size: 14px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-        .s-detalles { font-size: 11px; color: #64748b; }
-        .proximo-turno-box { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .proximo-turno-label { font-size: 13px; font-weight: 700; color: #166534; text-transform: uppercase; }
-        .proximo-turno-num { font-size: 22px; font-weight: 900; color: #15803d; }
-        .logo-container { text-align: center; margin-bottom: 15px; }
-        .logo-container img { max-height: 55px; object-fit: contain; }
-        h2 { text-align: center; color: #0f172a; margin-top: 0; font-weight: 800; font-size: 20px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .full-width { grid-column: span 2; }
-        label { font-weight: 700; color: #334155; display: block; margin-top: 6px; font-size: 11px; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 9px; margin-top: 3px; border: 1.5px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 13px; background: #f8fafc; }
-        button[type="submit"] { background: #0284c7; color: white; padding: 12px; border: none; width: 100%; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; margin-top: 15px; }
-            .view-btn { background:#0284c7;color:white;border:0;padding:5px 10px;border-radius:6px;cursor:pointer;font-weight:700;font-size:11px; }
-        #modalDetalles { position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:9999;display:none;align-items:center;justify-content:center; }
-        .modal-card { background:white;width:500px;max-width:90%;max-height:90vh;overflow:auto;border-radius:16px;padding:28px;box-shadow:0 10px 25px rgba(0,0,0,.3); }
-        .modal-card h3 { color:#0284c7;margin-top:0;border-bottom:2px solid #e2e8f0;padding-bottom:10px; }
-        .modal-close { background:#64748b;color:white;border:0;width:100%;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;margin-top:18px; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .container { display: flex; gap: 22px; width: 100%; max-width: 1140px; align-items: stretch; }
+        
+        .form-panel { background: #ffffff; border-radius: 18px; padding: 30px 35px; width: 63%; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+        .logo-title { text-align: center; margin-bottom: 14px; }
+        .logo-title img { max-height: 65px; object-fit: contain; margin-bottom: 8px; }
+        .logo-title h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; }
+
+        .estado-conexion { text-align: center; font-size: 12px; font-weight: 700; margin-bottom: 14px; padding: 6px; border-radius: 6px; background: #f1f5f9; color: #475569; }
+
+        .tipo-turno-selector { display: flex; gap: 12px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .radio-btn { display: none; }
+        .radio-label { flex: 1; text-align: center; min-width: 210px; padding: 12px 18px; border-radius: 10px; border: 2px solid #cbd5e1; cursor: pointer; font-weight: 800; font-size: 15px; color: #64748b; transition: all 0.15s ease; user-select: none; }
+        #turnoA:checked + .radio-label { background: #e0f2fe; border-color: #0284c7; color: #0284c7; box-shadow: 0 4px 12px rgba(2,132,199,0.15); }
+        #turnoB:checked + .radio-label { background: #dcfce7; border-color: #16a34a; color: #15803d; box-shadow: 0 4px 12px rgba(22,163,74,0.15); }
+
+        .turno-estimado { background: #ecfbf2; border: 2px solid #bbf7d0; border-radius: 12px; padding: 14px 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; cursor: pointer; user-select: none; }
+        .turno-estimado.modo-a { background: #eff6ff; border-color: #bfdbfe; }
+        .turno-estimado span { color: #15803d; font-weight: 800; font-size: 15px; }
+        .turno-estimado.modo-a span { color: #0369a1; }
+        .turno-estimado strong { color: #15803d; font-weight: 900; font-size: 36px; }
+        .turno-estimado.modo-a strong { color: #0284c7; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin-bottom: 22px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-group label { font-size: 11px; font-weight: 800; color: #334155; text-transform: uppercase; }
+        .form-group input, .form-group select, .form-group textarea { padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #0f172a; outline: none; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #0284c7; }
+
+        .oculto { display: none !important; }
+
+        .btn-guardar { background: #0284c7; color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; transition: background 0.2s; }
+        .btn-guardar:hover { background: #0369a1; }
+        .btn-guardar.btn-b { background: #16a34a; }
+        .btn-guardar.btn-b:hover { background: #15803d; }
+
+        .history-panel { background: #ffffff; border-radius: 18px; padding: 25px 20px; width: 37%; box-shadow: 0 10px 25px rgba(0,0,0,0.06); display: flex; flex-direction: column; }
+        .history-panel h3 { text-align: center; color: #0f172a; margin: 0 0 12px 0; font-size: 15px; font-weight: 900; border-bottom: 2px solid #e2e8f0; padding-bottom: 14px; }
+        .history-list { overflow-y: auto; flex-grow: 1; max-height: 540px; padding-right: 6px; }
+        
+        .history-item { border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .history-item.item-b { border-left: 6px solid #16a34a; background: #f0fdf4; }
+        .h-turno { font-weight: 900; font-size: 20px; color: #0284c7; margin-bottom: 4px; }
+        .history-item.item-b .h-turno { color: #16a34a; }
+        .h-nombre { font-size: 13px; color: #0f172a; font-weight: 800; text-transform: uppercase; max-width: 215px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 75px; }
+        .btn-ver { background: #0284c7; color: white; border: none; padding: 5px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .history-item.item-b .btn-ver { background: #16a34a; }
+        .h-fecha { font-size: 11px; color: #64748b; line-height: 1.1; text-align: right; }
+
+        #modalDetalle { position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 15px; }
+        .modal-card { background: #ffffff; border-radius: 14px; padding: 26px 30px; width: 100%; max-width: 480px; box-shadow: 0 20px 45px rgba(0,0,0,0.25); }
+        .modal-card h4 { margin: 0 0 16px 0; font-size: 20px; font-weight: 800; color: #0284c7; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 10px; }
+        .modal-row { margin-bottom: 11px; font-size: 14.5px; color: #1e293b; }
+        .btn-cerrar { margin-top: 18px; width: 100%; padding: 11px; background: #64748b; color: #ffffff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .form-panel, .history-panel { width: 100%; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+        }
     </style>
 </head>
 <body>
-<div id="modalDetalles"><div class="modal-card"><h3>Detalles del Turno</h3><div id="contenidoModal"></div><button class="modal-close" onclick="cerrarModal()">Cerrar</button></div></div>
 
-<div class="form-container">
-    <div class="logo-container"><img src="img/logo.png" alt="Logo Empresa"></div>
-    <h2>Registro de Nuevo Cliente</h2>
+<div class="container">
+    <div class="form-panel">
+        <div class="logo-title">
+            <!-- Ruta de la imagen apuntando a la carpeta img local -->
+            <img src="img/logo.png" alt="Logo Empresa">
+            <h2>Registro de Nuevo Cliente</h2>
+        </div>
 
-    <div class="proximo-turno-box">
-        <span class="proximo-turno-label">Siguiente Turno Estimado:</span>
-        <span class="proximo-turno-num" id="lblSiguienteTurno">A1</span>
+        <div id="lblEstadoConexion" class="estado-conexion">Sistema listo para recepcionar</div>
+
+        <div class="tipo-turno-selector">
+            <input type="radio" id="turnoA" name="tipoTurno" value="A" class="radio-btn" checked onchange="cambiarModoFormulario(true)">
+            <label for="turnoA" class="radio-label">Registro Familiar Cliente A</label>
+
+            <input type="radio" id="turnoB" name="tipoTurno" value="B" class="radio-btn" onchange="cambiarModoFormulario(true)">
+            <label for="turnoB" class="radio-label">Bienes Municipales B</label>
+        </div>
+
+        <div class="turno-estimado modo-a" id="cajaEstimado" title="Doble clic para reiniciar contador si vaciaste la base de datos">
+            <span>SIGUIENTE TURNO ESTIMADO:</span>
+            <strong id="lblTurnoSiguiente">A1</strong>
+        </div>
+
+        <form id="formRecepcion" onsubmit="guardarTurno(event)">
+            <div class="form-grid">
+                <div class="form-group" id="grupoNombres">
+                    <label id="lblNombres">Nombres:</label>
+                    <input type="text" id="nombres" required autocomplete="off">
+                </div>
+
+                <div class="form-group campo-solo-a">
+                    <label>Apellidos:</label>
+                    <input type="text" id="apellidos" autocomplete="off">
+                </div>
+
+                <div class="form-group campo-solo-a">
+                    <label>Género:</label>
+                    <select id="genero">
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                    </select>
+                </div>
+
+                <div class="form-group campo-solo-a">
+                    <label>Fecha de Nacimiento:</label>
+                    <input type="date" id="fechaNac">
+                </div>
+
+                <div class="form-group campo-solo-a">
+                    <label>Nombre del Padre:</label>
+                    <input type="text" id="padre" autocomplete="off">
+                </div>
+
+                <div class="form-group campo-solo-a">
+                    <label>Nombre de la Madre:</label>
+                    <input type="text" id="madre" autocomplete="off">
+                </div>
+
+                <div class="form-group full-width campo-solo-a">
+                    <label>Lugar de Nacimiento:</label>
+                    <input type="text" id="lugarNac" autocomplete="off">
+                </div>
+
+                <div class="form-group full-width">
+                    <label id="lblComentarios">Comentarios:</label>
+                    <textarea id="comentarios" rows="3"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-guardar" id="btnGuardar">Guardar e Imprimir Turno</button>
+        </form>
     </div>
 
-    <form id="registroForm">
-        <div class="form-grid">
-            <div><label>Nombres:</label><input type="text" id="nombres" required autocomplete="off" autofocus></div>
-            <div><label>Apellidos:</label><input type="text" id="apellidos" required autocomplete="off"></div>
-            <div><label>Género:</label><select id="genero"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
-            <div><label>Fecha de Nacimiento:</label><input type="date" id="fechaNacimiento"></div>
-            <div><label>Nombre del Padre:</label><input type="text" id="padre"></div>
-            <div><label>Nombre de la Madre:</label><input type="text" id="madre"></div>
-            <div class="full-width"><label>Lugar de Nacimiento:</label><input type="text" id="lugarNacimiento"></div>
-            <div class="full-width"><label>Comentarios:</label><textarea id="comentarios" rows="2"></textarea></div>
-        </div>
-        <button type="submit" id="btnSubmit">Guardar e Imprimir Turno</button>
-    </form>
+    <div class="history-panel">
+        <h3>HISTORIAL DE INGRESOS HOY</h3>
+        <div class="history-list" id="listaHistorial"></div>
+    </div>
 </div>
 
-<div class="sidebar-container">
-    <div class="sidebar-title">Historial de Ingresos Hoy</div>
-    <div class="sidebar-list" id="sidebarLista">
-        <div style="text-align: center; color: #94a3b8; margin-top: 50px; font-size: 13px;">No hay registros previos en esta sesión</div>
+<div id="modalDetalle">
+    <div class="modal-card">
+        <h4 id="mTitulo">Detalles del Turno</h4>
+        <div id="mContenido"></div>
+        <button class="btn-cerrar" onclick="document.getElementById('modalDetalle').style.display='none'">Cerrar</button>
     </div>
 </div>
 
 <script>
-const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbznHSwy_Rujdv5En5GZRqr4TrwS_i86jVmLjsr5fsk2y6CGFsHDal1l_Z37g5PI3-XU/exec";
-const CACHE_DATOS = "colas_recepcion_datos_v2";
-const CACHE_PENDIENTES = "colas_recepcion_pendientes_v2";
-const CACHE_CONTADOR = "colas_recepcion_contador_v2";
-let datosCache = leerJSON(CACHE_DATOS, []);
-let pendientesEnvio = leerJSON(CACHE_PENDIENTES, []);
-const CACHE_FECHA_CONTADOR = "colas_recepcion_fecha_contador_v2";
-let contadorTurnoLocal = Number(localStorage.getItem(CACHE_CONTADOR) || 1);
-let flushActivo = false;
+const URL_SCRIPT_A = "https://script.google.com/macros/s/AKfycbznHSwy_Rujdv5En5GZRqr4TrwS_i86jVmLjsr5fsk2y6CGFsHDal1l_Z37g5PI3-XU/exec";
+const URL_SCRIPT_B = "https://script.google.com/macros/s/AKfycbw7eaRPwFM-du9JAATEGmLIg4nCXBAmMBYJZoVBEcIQEDJj_mN6YbQq7lUhZywfcvh6/exec";
 
-function fechaLocalClave(v=new Date()) {
-    const d = new Date(v);
-    if (isNaN(d)) return '';
-    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const CACHE_KEY_REC = "cache_recepcion_turnos_ab_v9_diario";
+const ZONA_HORARIA_RECEPCION = "America/El_Salvador";
+const INTERVALO_SINCRONIZACION_MS = 45000;
+
+let consultaEnCurso = { A: false, B: false };
+let ultimaConsultaTS = { A: 0, B: 0 };
+let ultimoEstado = { A: "Consultando...", B: "Consultando..." };
+let siguienteA = "A1";
+let siguienteB = "B1";
+let historialA = [];
+let historialB = [];
+let ignoradosHoy = []; // Guarda firmas de registros borrados manualmente en Excel pero pegados en caché de Google
+
+function obtenerTipoActivo() {
+    const el = document.querySelector('input[name="tipoTurno"]:checked');
+    return el ? el.value : 'A';
 }
-function asegurarContadorDelDia() {
-    const hoy = fechaLocalClave();
-    const guardada = localStorage.getItem(CACHE_FECHA_CONTADOR);
-    if (guardada !== hoy) {
-        contadorTurnoLocal = 1;
-        localStorage.setItem(CACHE_CONTADOR, '1');
-        localStorage.setItem(CACHE_FECHA_CONTADOR, hoy);
+
+function peticionGoogleScript(urlCompleta, tipo = 'A') {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000);
+    return fetch(urlCompleta, {cache: 'no-store', signal: ctrl.signal})
+        .then(async r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch(async err => {
+            if (tipo !== 'B') throw err;
+            return new Promise((resolve, reject) => {
+                const cbName = 'cb_rec_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+                const script = document.createElement('script');
+                let finished = false;
+                const finish = (error, result) => {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(t);
+                    delete window[cbName];
+                    script.remove();
+                    error ? reject(error) : resolve(result);
+                };
+                const t = setTimeout(() => finish(new Error('JSONP agotó tiempo')), 8000);
+                window[cbName] = data => finish(null, data);
+                script.onerror = () => finish(new Error('Error de JSONP'));
+                script.src = urlCompleta + (urlCompleta.includes('?') ? '&' : '?') + 'callback=' + cbName;
+                document.body.appendChild(script);
+            });
+        }).finally(() => clearTimeout(timer));
+}
+
+function normalizarClave(str) {
+    return String(str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function leerCampo(obj, posiblesNombres, def = "") {
+    if (!obj || typeof obj !== "object") return def;
+    const mapa = {};
+    for (const k of Object.keys(obj)) mapa[normalizarClave(k)] = obj[k];
+    for (const nombre of posiblesNombres) {
+        const val = mapa[normalizarClave(nombre)];
+        if (val !== undefined && val !== null && String(val).trim() !== "") return String(val).trim();
+    }
+    return def;
+}
+
+function fechaLocalISO(fecha = new Date()) {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: ZONA_HORARIA_RECEPCION, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(fecha);
+}
+
+function fechaRegistroISO(x) {
+    const valor = leerCampo(x, ["FechaHora", "FechaRegistro", "Fecha", "Timestamp"]);
+    if (!valor) return "";
+    const isoConHora = /^\d{4}-\d{2}-\d{2}T/.test(valor);
+    if (isoConHora) {
+        const fecha = new Date(valor);
+        return Number.isNaN(fecha.getTime()) ? "" : fechaLocalISO(fecha);
+    }
+    const iso = valor.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    const local = valor.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+    if (local) return `${local[3]}-${local[2].padStart(2,'0')}-${local[1].padStart(2,'0')}`;
+    return "";
+}
+
+function obtenerNombreParaTarjeta(x) {
+    const nombres = leerCampo(x, ["Nombres", "Nombre", "Cliente", "NombreCompleto"]);
+    const apellidos = leerCampo(x, ["Apellidos", "Apellido"]);
+    const completo = `${nombres} ${apellidos}`.trim();
+    return completo !== "" ? completo : "SIN NOMBRE";
+}
+
+function firmaRegistro(x) {
+    const id = leerCampo(x, ["ID", "Turno", "Numero"]).toUpperCase();
+    const nombre = obtenerNombreParaTarjeta(x).toUpperCase().trim();
+    return `${id}|${nombre}`;
+}
+
+function esRegistroValido(x) {
+    const nombre = obtenerNombreParaTarjeta(x).toUpperCase().trim();
+    // Filtra registros vacíos, "CLIENTE:" y el registro pegado "PRUEBA"
+    if (nombre === "SIN NOMBRE" || nombre === "CLIENTE:" || nombre === "CLIENTE" || nombre === "PRUEBA") {
+        return false;
+    }
+    if (ignoradosHoy.includes(firmaRegistro(x))) {
+        return false;
+    }
+    return true;
+}
+
+function aislarTurnosRecientesDelDia(lista, prefijo) {
+    if (!Array.isArray(lista)) return [];
+    const hoy = fechaLocalISO();
+    const vistos = new Set();
+    const resultado = [];
+
+    lista.forEach(x => {
+        const id = leerCampo(x, ["ID", "Turno", "Numero"]).toUpperCase();
+        if (
+            new RegExp(`^${prefijo}[0-9]+$`).test(id) &&
+            fechaRegistroISO(x) === hoy &&
+            esRegistroValido(x) &&
+            !vistos.has(id)
+        ) {
+            vistos.add(id);
+            resultado.push(x);
+        }
+    });
+    return resultado;
+}
+
+function guardarRespaldoLocal() {
+    try {
+        localStorage.setItem(CACHE_KEY_REC, JSON.stringify({
+            dia: fechaLocalISO(), historialA, historialB, siguienteA, siguienteB, ignoradosHoy
+        }));
+    } catch (e) {}
+}
+
+function limpiarCambioDeDia() {
+    const hoy = fechaLocalISO();
+    if (window.__diaRecepcion === hoy) return;
+    window.__diaRecepcion = hoy;
+    historialA = [];
+    historialB = [];
+    ignoradosHoy = [];
+    siguienteA = "A1";
+    siguienteB = "B1";
+    try { localStorage.removeItem(CACHE_KEY_REC); } catch (e) {}
+    guardarRespaldoLocal();
+    cambiarModoFormulario(false);
+}
+
+function calcularSiguienteTurno(listaHoy, prefijo) {
+    if (!Array.isArray(listaHoy) || !listaHoy.length) return prefijo + "1";
+    let max = 0;
+    listaHoy.forEach(x => {
+        const id = leerCampo(x, ["ID", "Turno", "Numero"]).toUpperCase();
+        if (id.startsWith(prefijo)) {
+            const num = parseInt(id.replace(/\D/g, ""), 10);
+            if (!isNaN(num) && num > max) max = num;
+        }
+    });
+    return prefijo + (max + 1);
+}
+
+function cambiarModoFormulario(verificarServidor = false) {
+    const tipo = obtenerTipoActivo();
+    const camposA = document.querySelectorAll('.campo-solo-a');
+    const grupoNombres = document.getElementById('grupoNombres');
+    const lblNombres = document.getElementById('lblNombres');
+    const lblComentarios = document.getElementById('lblComentarios');
+    const inputComentarios = document.getElementById('comentarios');
+    const cajaEstimado = document.getElementById('cajaEstimado');
+    const lblTurno = document.getElementById('lblTurnoSiguiente');
+    const btnGuardar = document.getElementById('btnGuardar');
+
+    if (tipo === 'A') {
+        camposA.forEach(el => el.classList.remove('oculto'));
+        grupoNombres.classList.remove('full-width');
+        lblNombres.textContent = "Nombres:";
+        lblComentarios.textContent = "Comentarios:";
+        inputComentarios.required = false;
+        cajaEstimado.classList.add('modo-a');
+        lblTurno.textContent = siguienteA;
+        btnGuardar.classList.remove('btn-b');
+    } else {
+        camposA.forEach(el => el.classList.add('oculto'));
+        grupoNombres.classList.add('full-width');
+        lblNombres.textContent = "Nombre Completo del Cliente:";
+        lblComentarios.textContent = "Trámite a Realizar (Bienes Municipales):";
+        inputComentarios.required = true;
+        cajaEstimado.classList.remove('modo-a');
+        lblTurno.textContent = siguienteB;
+        btnGuardar.classList.add('btn-b');
+    }
+    pintarHistorial();
+    actualizarIndicadorConexion();
+
+    if (verificarServidor && (Date.now() - ultimaConsultaTS[tipo] > 20000)) {
+        consultarServicio(tipo, tipo === 'A' ? URL_SCRIPT_A : URL_SCRIPT_B);
     }
 }
 
-
-function fechaSolo(v){
-    if(!v) return '';
-    const s=String(v).trim();
-    const m=s.match(/^(\d{4}-\d{2}-\d{2})/);
-    if(m) return m[1];
-    const d=new Date(s);
-    if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    return s;
+function restaurarRespaldoLocal() {
+    const hoy = fechaLocalISO();
+    window.__diaRecepcion = hoy;
+    try {
+        localStorage.removeItem("cache_recepcion_turnos_ab_v7_diario");
+        localStorage.removeItem("cache_recepcion_turnos_ab_v8_diario");
+        const guardado = JSON.parse(localStorage.getItem(CACHE_KEY_REC) || "null");
+        if (!guardado || guardado.dia !== hoy) return;
+        ignoradosHoy = Array.isArray(guardado.ignoradosHoy) ? guardado.ignoradosHoy : [];
+        historialA = aislarTurnosRecientesDelDia(guardado.historialA || [], "A");
+        historialB = aislarTurnosRecientesDelDia(guardado.historialB || [], "B");
+        siguienteA = calcularSiguienteTurno(historialA, "A");
+        siguienteB = calcularSiguienteTurno(historialB, "B");
+    } catch (e) {}
 }
 
-function leerJSON(clave, defecto) { try { return JSON.parse(localStorage.getItem(clave)) ?? defecto; } catch(e) { return defecto; } }
-function guardarJSON(clave, valor) { try { localStorage.setItem(clave, JSON.stringify(valor)); } catch(e) {} }
-function hoyLocal(v) { const d=new Date(v); return !isNaN(d) && d.toLocaleDateString()===new Date().toLocaleDateString(); }
-function recalcularContador() {
-    asegurarContadorDelDia();
-    let max=0;
-    [...datosCache, ...pendientesEnvio.map(x=>x.registro)].forEach(r=>{
-        if (r.FechaHora && hoyLocal(r.FechaHora)) {
-            const m=String(r.ID||'').trim().match(/^A(\d+)$/i);
-            if(m) max=Math.max(max,Number(m[1]));
+function actualizarIndicadorConexion() {
+    const tipo = obtenerTipoActivo();
+    document.getElementById('lblEstadoConexion').textContent = `Servicio ${tipo}: ${ultimoEstado[tipo]}`;
+}
+
+async function consultarServicio(tipo, url) {
+    limpiarCambioDeDia();
+    if (consultaEnCurso[tipo]) return;
+    consultaEnCurso[tipo] = true;
+
+    try {
+        const res = await peticionGoogleScript(`${url}?accion=estado&t=${Date.now()}`, tipo);
+        if (!res || res.status === 'error' || res.ok === false) throw new Error('Sin respuesta válida');
+        const datos = Array.isArray(res) ? res : (Array.isArray(res.datos) ? res.datos : []);
+        const filtrados = aislarTurnosRecientesDelDia(datos, tipo);
+
+        if (tipo === 'A') {
+            historialA = filtrados;
+            siguienteA = calcularSiguienteTurno(filtrados, 'A');
+        } else {
+            historialB = filtrados;
+            siguienteB = calcularSiguienteTurno(filtrados, 'B');
+        }
+        ultimaConsultaTS[tipo] = Date.now();
+        ultimoEstado[tipo] = 'Conectado · datos de hoy';
+        guardarRespaldoLocal();
+    } catch (err) {
+        ultimoEstado[tipo] = 'Error de lectura (' + String(err.message || err).slice(0,75) + ') · respaldo local';
+    } finally {
+        consultaEnCurso[tipo] = false;
+        cambiarModoFormulario(false);
+    }
+}
+
+async function consultarEstado(ambos = false) {
+    limpiarCambioDeDia();
+    if (document.hidden && !ambos) return;
+
+    if (ambos) {
+        await Promise.all([
+            consultarServicio('A', URL_SCRIPT_A),
+            consultarServicio('B', URL_SCRIPT_B)
+        ]);
+    } else {
+        const tipoActivo = obtenerTipoActivo();
+        const urlActiva = (tipoActivo === 'A') ? URL_SCRIPT_A : URL_SCRIPT_B;
+        await consultarServicio(tipoActivo, urlActiva);
+    }
+}
+
+async function guardarTurno(event) {
+    event.preventDefault();
+    limpiarCambioDeDia();
+    const tipo = obtenerTipoActivo();
+    const urlDestino = (tipo === 'A') ? URL_SCRIPT_A : URL_SCRIPT_B;
+
+    if (!urlDestino.includes("script.google.com")) {
+        alert(`Configura la URL .exec del servicio ${tipo}.`);
+        return;
+    }
+
+    const nombres = document.getElementById('nombres').value.trim();
+    const apellidos = document.getElementById('apellidos').value.trim();
+    const genero = document.getElementById('genero').value;
+    const fechaNac = document.getElementById('fechaNac').value;
+    const padre = document.getElementById('padre').value.trim() || "N/D";
+    const madre = document.getElementById('madre').value.trim() || "N/D";
+    const lugarNac = document.getElementById('lugarNac').value.trim() || "N/D";
+    const comentarios = document.getElementById('comentarios').value.trim() || "N/D";
+    const nombreCompleto = (tipo === 'A') ? `${nombres} ${apellidos}`.trim() : nombres;
+    
+    const turnoAsignado = (tipo === 'A') ? siguienteA : siguienteB;
+
+    const nuevoItemLocal = {
+        ID: turnoAsignado,
+        Nombres: nombres,
+        Apellidos: apellidos,
+        Nombre: nombreCompleto,
+        Genero: genero,
+        FechaNacimiento: fechaNac,
+        Padre: padre,
+        Madre: madre,
+        LugarNacimiento: lugarNac,
+        Tramite: comentarios,
+        Comentarios: comentarios,
+        Estado: "Pendiente",
+        FechaHora: new Date().toISOString(),
+        FechaRegistro: fechaLocalISO()
+    };
+
+    // Si este nuevo turno tenía una firma ignorada previa, la libera
+    const nuevaFirma = firmaRegistro(nuevoItemLocal);
+    ignoradosHoy = ignoradosHoy.filter(f => f !== nuevaFirma);
+
+    if (tipo === 'A') {
+        historialA.push(nuevoItemLocal);
+        siguienteA = calcularSiguienteTurno(historialA, 'A');
+    } else {
+        historialB.push(nuevoItemLocal);
+        siguienteB = calcularSiguienteTurno(historialB, 'B');
+    }
+
+    document.getElementById('formRecepcion').reset();
+    document.getElementById('nombres').focus();
+    guardarRespaldoLocal();
+    cambiarModoFormulario(false);
+
+    const params = new URLSearchParams({
+        accion: "registrar",
+        ID: turnoAsignado,
+        nombre: nombreCompleto,
+        Nombres: nombres,
+        Apellidos: apellidos,
+        Genero: genero,
+        FechaNacimiento: fechaNac,
+        Padre: padre,
+        Madre: madre,
+        LugarNacimiento: lugarNac,
+        tramite: comentarios,
+        Comentarios: comentarios,
+        t: Date.now()
+    });
+
+    peticionGoogleScript(`${urlDestino}?${params.toString()}`, tipo).then(() => {
+        consultarServicio(tipo, urlDestino);
+    });
+}
+
+function escaparTexto(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fechaLegible(valor, incluirHora = true) {
+    const texto = String(valor || "").trim();
+    if (!texto) return "—";
+    if (/^\d{4}-\d{2}-\d{2}T/.test(texto)) {
+        const d = new Date(texto);
+        if (!Number.isNaN(d.getTime())) return new Intl.DateTimeFormat('es-ES', {
+            timeZone: ZONA_HORARIA_RECEPCION, day:'2-digit',month:'2-digit',year:'numeric',
+            ...(incluirHora ? {hour:'2-digit',minute:'2-digit',hour12:false} : {})
+        }).format(d);
+    }
+    const fechaISO = texto.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|\s)/);
+    if (fechaISO) return `${fechaISO[3]}/${fechaISO[2]}/${fechaISO[1]}`;
+    const fechaLocal = texto.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})(.*)$/);
+    if (fechaLocal) return `${fechaLocal[1].padStart(2,'0')}/${fechaLocal[2].padStart(2,'0')}/${fechaLocal[3]}${incluirHora ? fechaLocal[4] : ''}`;
+    return texto;
+}
+
+function filaDetalle(etiqueta, valor) {
+    const texto = String(valor ?? "").trim();
+    if (!texto || texto === 'N/D' || texto === '--') return '';
+    return `<div class="modal-row"><strong>${escaparTexto(etiqueta)}:</strong> ${escaparTexto(texto)}</div>`;
+}
+
+function detallesTurno(x, esB, id) {
+    const fecha = leerCampo(x, ['FechaHora','FechaRegistro','Fecha','Timestamp']);
+    const filas = [filaDetalle('Turno', id), filaDetalle(esB ? 'Fecha' : 'Fecha/Hora', fechaLegible(fecha, !esB))];
+    if (esB) {
+        filas.push(filaDetalle('Nombre completo', leerCampo(x, ['Nombre','NombreCompleto','Nombres','Cliente'])));
+        filas.push(filaDetalle('Trámite a realizar', leerCampo(x, ['Tramite','Trámite','Comentarios'])));
+    } else {
+        filas.push(filaDetalle('Nombres', leerCampo(x, ['Nombres','Nombre'])));
+        filas.push(filaDetalle('Apellidos', leerCampo(x, ['Apellidos','Apellido'])));
+        filas.push(filaDetalle('Género', leerCampo(x, ['Genero','Género'])));
+        filas.push(filaDetalle('Fecha de nacimiento', fechaLegible(leerCampo(x, ['FechaNacimiento']), false)));
+        filas.push(filaDetalle('Padre', leerCampo(x, ['Padre'])));
+        filas.push(filaDetalle('Madre', leerCampo(x, ['Madre'])));
+        filas.push(filaDetalle('Lugar de nacimiento', leerCampo(x, ['LugarNacimiento'])));
+        filas.push(filaDetalle('Comentarios', leerCampo(x, ['Comentarios','Tramite'])));
+    }
+    return filas.join('');
+}
+
+function pintarHistorial() {
+    const cont = document.getElementById('listaHistorial');
+    const tipoActivo = obtenerTipoActivo();
+    const listaBase = (tipoActivo === 'A') ? historialA : historialB;
+    const lista = [...listaBase].reverse();
+
+    if (!lista.length) {
+        cont.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:13px;">Sin ingresos registrados hoy</p>`;
+        return;
+    }
+
+    cont.innerHTML = "";
+    lista.forEach(x => {
+        const id = leerCampo(x, ["ID", "Turno", "Numero"], "--");
+        const esB = id.toUpperCase().startsWith("B");
+        const nombreCompleto = obtenerNombreParaTarjeta(x);
+        const fechaMini = fechaRegistroISO(x) || "";
+
+        const div = document.createElement("div");
+        div.className = `history-item ${esB ? 'item-b' : ''}`;
+        div.innerHTML = `
+            <div>
+                <div class="h-turno">${id}</div>
+                <div class="h-nombre">${nombreCompleto}</div>
+            </div>
+            <div class="right-col">
+                <button type="button" class="btn-ver">Ver</button>
+                <span class="h-fecha">${fechaMini}</span>
+            </div>
+        `;
+        div.querySelector(".btn-ver").onclick = () => {
+            document.getElementById("mTitulo").textContent = `Detalles del Turno: ${id}`;
+            document.getElementById("mContenido").innerHTML = detallesTurno(x, esB, id);
+            document.getElementById("modalDetalle").style.display = "flex";
+        };
+        cont.appendChild(div);
+    });
+}
+
+window.onload = () => {
+    restaurarRespaldoLocal();
+    cambiarModoFormulario(false);
+    consultarEstado(true);
+
+    // Doble clic en "SIGUIENTE TURNO ESTIMADO" descarta cualquier dato pegado en la caché de Google Script y reinicia a A1/B1
+    document.getElementById('cajaEstimado').addEventListener('dblclick', () => {
+        const tipo = obtenerTipoActivo();
+        const listaActual = (tipo === 'A') ? historialA : historialB;
+        listaActual.forEach(x => {
+            const f = firmaRegistro(x);
+            if (!ignoradosHoy.includes(f)) ignoradosHoy.push(f);
+        });
+        if (tipo === 'A') { historialA = []; siguienteA = "A1"; }
+        else { historialB = []; siguienteB = "B1"; }
+        guardarRespaldoLocal();
+        cambiarModoFormulario(false);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            const tipo = obtenerTipoActivo();
+            if (Date.now() - ultimaConsultaTS[tipo] > 30000) {
+                consultarEstado(false);
+            }
         }
     });
-    contadorTurnoLocal=max+1;
-    localStorage.setItem(CACHE_CONTADOR,String(contadorTurnoLocal));
-    localStorage.setItem(CACHE_FECHA_CONTADOR,fechaLocalClave());
-    document.getElementById('lblSiguienteTurno').innerText='A'+contadorTurnoLocal;
-}
-function pintarHistorial() {
-    const lista=document.getElementById('sidebarLista'); lista.innerHTML='';
-    const hoy=[...datosCache.filter(r=>r.FechaHora&&hoyLocal(r.FechaHora)), ...pendientesEnvio.map(x=>x.registro)]
-        .filter((r,i,a)=>a.findIndex(x=>String(x.UID||x.ClientRequestId||x.ID)===String(r.UID||r.ClientRequestId||r.ID))===i)
-        .sort((a,b)=>new Date(b.FechaHora||0)-new Date(a.FechaHora||0));
-    if(!hoy.length){ lista.innerHTML='<div style="text-align: center; color: #94a3b8; margin-top: 50px; font-size: 13px;">No hay registros previos en esta sesión</div>'; return; }
-    hoy.forEach(agregarAHistorialLateral);
-}
-async function sincronizarSiguienteTurno() {
-    try {
-        const ctrl=new AbortController(); const tm=setTimeout(()=>ctrl.abort(),4500); let res;
-        try { res=await fetch(URL_WEB_APP+'?accion=estado&t='+Date.now(),{cache:'no-store',signal:ctrl.signal}); }
-        finally { clearTimeout(tm); }
-        if(!res.ok) throw new Error();
-        const servidor=await res.json();
-        datosCache=Array.isArray(servidor)?servidor:(servidor.datos||[]); guardarJSON(CACHE_DATOS,datosCache);
-        recalcularContador(); pintarHistorial();
-    } catch(e) { recalcularContador(); }
-}
-function crearToken(){ return 'rx-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10); }
-function programarEnvio(){ setTimeout(enviarPendientes,50); }
-async function enviarPendientes(){
-    if(flushActivo || !pendientesEnvio.length || !navigator.onLine) return;
-    flushActivo=true;
-    try {
-        const item=pendientesEnvio[0];
-        const res=await fetch(URL_WEB_APP,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(item.payload),cache:'no-store'});
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        const resultado=await res.json();
-        if(resultado.status!=='ok') throw new Error(resultado.message||'No guardado');
-        const confirmado={...item.registro,UID:resultado.uid||'',ID:resultado.id||item.registro.ID,FechaHora:resultado.FechaHora||item.registro.FechaHora,Estado:'Pendiente',ClientRequestId:item.token};
-        // Quitamos solo el registro provisional de ESTA petición, no otros A1/A2 históricos.
-        datosCache=datosCache.filter(r=>String(r.ClientRequestId||'')!==String(item.token)); datosCache.push(confirmado); guardarJSON(CACHE_DATOS,datosCache);
-        pendientesEnvio.shift(); guardarJSON(CACHE_PENDIENTES,pendientesEnvio); pintarHistorial();
-        if(pendientesEnvio.length) setTimeout(enviarPendientes,100);
-    } catch(e) { setTimeout(enviarPendientes,3000); }
-    finally { flushActivo=false; }
-}
-window.addEventListener('online',()=>{enviarPendientes(); sincronizarSiguienteTurno();});
-window.addEventListener('pageshow',()=>{pintarHistorial(); recalcularContador();});
-window.onload=function(){ asegurarContadorDelDia(); pintarHistorial(); recalcularContador(); sincronizarSiguienteTurno(); programarEnvio(); setInterval(sincronizarSiguienteTurno,8000); };
 
-document.getElementById('registroForm').addEventListener('submit',function(e){
-    e.preventDefault(); const btn=document.getElementById('btnSubmit'); btn.disabled=true;
-    const id='A'+contadorTurnoLocal; const ahora=new Date().toISOString(); const token=crearToken();
-    const datos={accion:'nuevo_registro',clientRequestId:token,idSolicitado:id,nombres:document.getElementById('nombres').value.trim(),apellidos:document.getElementById('apellidos').value.trim(),genero:document.getElementById('genero').value,fechaNacimiento:document.getElementById('fechaNacimiento').value,padre:document.getElementById('padre').value.trim(),madre:document.getElementById('madre').value.trim(),lugarNacimiento:document.getElementById('lugarNacimiento').value.trim(),comentarios:document.getElementById('comentarios').value.trim()};
-    const registro={UID:'',ID:id,FechaHora:ahora,Nombres:datos.nombres,Apellidos:datos.apellidos,Genero:datos.genero,FechaNacimiento:datos.fechaNacimiento,Padre:datos.padre,Madre:datos.madre,LugarNacimiento:datos.lugarNacimiento,Comentarios:datos.comentarios,Estado:'Pendiente',ClientRequestId:token};
-    pendientesEnvio.push({token,creado:Date.now(),payload:datos,registro}); guardarJSON(CACHE_PENDIENTES,pendientesEnvio);
-    contadorTurnoLocal++; localStorage.setItem(CACHE_CONTADOR,String(contadorTurnoLocal)); document.getElementById('registroForm').reset(); pintarHistorial(); document.getElementById('lblSiguienteTurno').innerText='A'+contadorTurnoLocal;
-    btn.style.backgroundColor='#16a34a'; btn.innerText=`¡Guardado local: ${id}!`;
-    setTimeout(()=>{btn.style.backgroundColor='#0284c7';btn.innerText='Guardar e Imprimir Turno';btn.disabled=false;document.getElementById('nombres').focus();},250);
-    programarEnvio();
-});
-function agregarAHistorialLateral(cliente){
-    const lista=document.getElementById('sidebarLista'); if(lista.innerHTML.includes('No hay registros')) lista.innerHTML='';
-    const card=document.createElement('div'); card.className='sidebar-card'; card.innerHTML=`<div class="sidebar-card-header"><span class="s-id">${cliente.ID}</span><button class="view-btn" type="button">Ver</button></div><div class="s-info-row"><div class="s-nombre">${cliente.Nombres||cliente.nombres||''} ${cliente.Apellidos||cliente.apellidos||''}</div><span class="s-detalles">${fechaSolo(cliente.FechaNacimiento||'')}</span></div>`; card.querySelector('.view-btn').onclick=()=>verDetallesRecepcion(cliente); lista.appendChild(card);
-}
-function verDetallesRecepcion(c){
- const html=`<p><b>Turno:</b> ${c.ID||''}</p><p><b>Fecha/Hora:</b> ${c.FechaHora?new Date(c.FechaHora).toLocaleString():''}</p><p><b>Nombres:</b> ${c.Nombres||c.nombres||''}</p><p><b>Apellidos:</b> ${c.Apellidos||c.apellidos||''}</p><p><b>Género:</b> ${c.Genero||c.genero||''}</p><p><b>Fecha de nacimiento:</b> ${fechaSolo(c.FechaNacimiento||c.fechaNacimiento||'')}</p><p><b>Padre:</b> ${c.Padre||c.padre||'N/D'}</p><p><b>Madre:</b> ${c.Madre||c.madre||'N/D'}</p><p><b>Lugar de nacimiento:</b> ${c.LugarNacimiento||c.lugarNacimiento||''}</p><p><b>Comentarios:</b> ${c.Comentarios||c.comentarios||'Ninguno'}</p><p><b>Estado:</b> ${c.Estado||'Pendiente'}</p>`;
- document.getElementById('contenidoModal').innerHTML=html; document.getElementById('modalDetalles').style.display='flex';
-}
-function cerrarModal(){document.getElementById('modalDetalles').style.display='none';}
+    setInterval(() => consultarEstado(false), INTERVALO_SINCRONIZACION_MS);
+    setInterval(() => limpiarCambioDeDia(), 30000);
+};
 </script>
 </body>
 </html>
