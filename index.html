@@ -2,630 +2,428 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recepción - Registro Familiar (A) y Bienes Municipales (B)</title>
+    <title>Panel de Oficinas - Control de Turnos</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { display: flex; gap: 22px; width: 100%; max-width: 1140px; align-items: stretch; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+        .header img { max-height: 55px; }
+        .ventanilla-box { background: #e0f2fe; color: #0369a1; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.9); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-card { background: white; padding: 40px; border-radius: 16px; width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-card h2 { color: #0f172a; margin-top: 0; margin-bottom: 10px; font-size: 22px; }
+        .login-card p { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+        .login-card input, .login-card select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; box-sizing: border-box; margin-bottom: 15px; text-align: center; }
+        .login-card button { background: #0284c7; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .tab-btn { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .tab-btn.active { background: #0284c7; }
+        .refresh-btn { background: #0d9488; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .user-tag { margin-left: auto; font-size: 14px; color: #475569; background: #f1f5f9; padding: 8px 15px; border-radius: 6px; border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 16px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 700; font-size: 14px; text-transform: uppercase; }
+        .cliente-info { font-size: 16px; font-weight: 700; color: #0f172a; }
+        .cliente-sub { font-size: 13px; color: #64748b; margin-top: 3px; }
+        .detalles-resumen { font-size: 14px; color: #475569; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #0284c7; }
+        .btn-accion-group { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+        button.action-btn { background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
+        button.called-btn { background: #ca8a04; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
+        button.resolved-btn { background: #475569; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; width: 110px; }
+        button.view-btn { background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
         
-        .form-panel { background: #ffffff; border-radius: 18px; padding: 30px 35px; width: 63%; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
-        .logo-title { text-align: center; margin-bottom: 14px; }
-        .logo-title img { max-height: 65px; object-fit: contain; margin-bottom: 8px; }
-        .logo-title h2 { color: #0f172a; margin: 0; font-size: 24px; font-weight: 800; }
+        #modalDetalles { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.7); z-index: 9998; display: none; justify-content: center; align-items: center; }
+        .modal-card { background: white; padding: 30px; border-radius: 16px; width: 500px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .modal-card h3 { color: #0284c7; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .modal-body p { margin: 8px 0; font-size: 14px; color: #334155; }
+        .modal-body b { color: #0f172a; }
+        .modal-close { background: #64748b; color: white; border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 14px; }
 
-        .estado-conexion { text-align: center; font-size: 12px; font-weight: 700; margin-bottom: 14px; padding: 6px; border-radius: 6px; background: #f1f5f9; color: #475569; }
+        /* DECORACIÓN NAVIDEÑA PURAMENTE VISUAL (SIN ALTERAR FUNCIONALIDAD NI COLORES BASE) */
+        .nav-guirnalda {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding: 0 12px;
+            pointer-events: none;
+            z-index: 9500;
+        }
+        .nav-guirnalda::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #166534, #b91c1c, #d97706, #0284c7, #166534);
+            opacity: 0.85;
+        }
+        .nav-foco-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .nav-foco-wrap:nth-child(even) { margin-top: 2px; }
+        .nav-casquillo {
+            width: 5px; height: 4px;
+            background: #334155;
+            border-radius: 0 0 2px 2px;
+        }
+        .nav-bulbo {
+            width: 9px; height: 13px;
+            border-radius: 50% 50% 55% 55%;
+            animation: navParpadeo 2.6s ease-in-out infinite;
+        }
+        .nav-bulbo.f-oro {
+            background: radial-gradient(circle at 35% 30%, #ffffff, #fde047 55%, #d97706 100%);
+            box-shadow: 0 0 8px 2px rgba(250, 204, 21, 0.75);
+        }
+        .nav-bulbo.f-rojo {
+            background: radial-gradient(circle at 35% 30%, #ffe4e6, #f87171 55%, #dc2626 100%);
+            box-shadow: 0 0 8px 2px rgba(248, 113, 113, 0.75);
+        }
+        .nav-bulbo.f-verde {
+            background: radial-gradient(circle at 35% 30%, #dcfce7, #4ade80 55%, #16a34a 100%);
+            box-shadow: 0 0 8px 2px rgba(74, 222, 128, 0.72);
+        }
+        .nav-bulbo.f-azul {
+            background: radial-gradient(circle at 35% 30%, #e0f2fe, #38bdf8 55%, #0284c7 100%);
+            box-shadow: 0 0 8px 2px rgba(56, 189, 248, 0.75);
+        }
+        .nav-bulbo.f-blanco {
+            background: radial-gradient(circle at 35% 30%, #ffffff, #fffbeb 65%, #fde68a 100%);
+            box-shadow: 0 0 8px 2px rgba(253, 230, 138, 0.85);
+        }
+        @keyframes navParpadeo {
+            0%, 100% { opacity: 0.42; transform: scale(0.90); }
+            50%      { opacity: 1; transform: scale(1.12); }
+        }
 
-        .tipo-turno-selector { display: flex; gap: 12px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        .radio-btn { display: none; }
-        .radio-label { flex: 1; text-align: center; min-width: 210px; padding: 12px 18px; border-radius: 10px; border: 2px solid #cbd5e1; cursor: pointer; font-weight: 800; font-size: 15px; color: #64748b; transition: all 0.15s ease; user-select: none; }
-        #turnoA:checked + .radio-label { background: #e0f2fe; border-color: #0284c7; color: #0284c7; box-shadow: 0 4px 12px rgba(2,132,199,0.15); }
-        #turnoB:checked + .radio-label { background: #dcfce7; border-color: #16a34a; color: #15803d; box-shadow: 0 4px 12px rgba(22,163,74,0.15); }
-
-        .turno-estimado { background: #ecfbf2; border: 2px solid #bbf7d0; border-radius: 12px; padding: 14px 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; cursor: pointer; user-select: none; }
-        .turno-estimado.modo-a { background: #eff6ff; border-color: #bfdbfe; }
-        .turno-estimado span { color: #15803d; font-weight: 800; font-size: 15px; }
-        .turno-estimado.modo-a span { color: #0369a1; }
-        .turno-estimado strong { color: #15803d; font-weight: 900; font-size: 36px; }
-        .turno-estimado.modo-a strong { color: #0284c7; }
-
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin-bottom: 22px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-group.full-width { grid-column: span 2; }
-        .form-group label { font-size: 11px; font-weight: 800; color: #334155; text-transform: uppercase; }
-        .form-group input, .form-group select, .form-group textarea { padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #0f172a; outline: none; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #0284c7; }
-
-        .oculto { display: none !important; }
-
-        .btn-guardar { background: #0284c7; color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; transition: background 0.2s; }
-        .btn-guardar:hover { background: #0369a1; }
-        .btn-guardar.btn-b { background: #16a34a; }
-        .btn-guardar.btn-b:hover { background: #15803d; }
-
-        .history-panel { background: #ffffff; border-radius: 18px; padding: 25px 20px; width: 37%; box-shadow: 0 10px 25px rgba(0,0,0,0.06); display: flex; flex-direction: column; }
-        .history-panel h3 { text-align: center; color: #0f172a; margin: 0 0 12px 0; font-size: 15px; font-weight: 900; border-bottom: 2px solid #e2e8f0; padding-bottom: 14px; }
-        .history-list { overflow-y: auto; flex-grow: 1; max-height: 540px; padding-right: 6px; }
-        
-        .history-item { border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .history-item.item-b { border-left: 6px solid #16a34a; background: #f0fdf4; }
-        .h-turno { font-weight: 900; font-size: 20px; color: #0284c7; margin-bottom: 4px; }
-        .history-item.item-b .h-turno { color: #16a34a; }
-        .h-nombre { font-size: 13px; color: #0f172a; font-weight: 800; text-transform: uppercase; max-width: 215px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        .right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 75px; }
-        .btn-ver { background: #0284c7; color: white; border: none; padding: 5px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
-        .history-item.item-b .btn-ver { background: #16a34a; }
-        .h-fecha { font-size: 11px; color: #64748b; line-height: 1.1; text-align: right; }
-
-        #modalDetalle { position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 15px; }
-        .modal-card { background: #ffffff; border-radius: 14px; padding: 26px 30px; width: 100%; max-width: 480px; box-shadow: 0 20px 45px rgba(0,0,0,0.25); }
-        .modal-card h4 { margin: 0 0 16px 0; font-size: 20px; font-weight: 800; color: #0284c7; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 10px; }
-        .modal-row { margin-bottom: 11px; font-size: 14.5px; color: #1e293b; }
-        .btn-cerrar { margin-top: 18px; width: 100%; padding: 11px; background: #64748b; color: #ffffff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
-
-        @media (max-width: 900px) {
-            .container { flex-direction: column; }
-            .form-panel, .history-panel { width: 100%; }
-            .form-grid { grid-template-columns: 1fr; }
-            .form-group.full-width { grid-column: span 1; }
+        .nav-brillos-capa {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9400;
+            overflow: hidden;
+        }
+        .nav-brillo {
+            position: absolute;
+            line-height: 1;
+            user-select: none;
+            animation: navDestello 3.4s ease-in-out infinite;
+        }
+        .nav-brillo.b-oro   { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.65); }
+        .nav-brillo.b-hielo { color: #0284c7; text-shadow: 0 0 8px rgba(56, 189, 248, 0.60); }
+        .nav-brillo.b-rojo  { color: #dc2626; text-shadow: 0 0 8px rgba(220, 38, 38, 0.55); }
+        .nav-brillo.b-verde { color: #16a34a; text-shadow: 0 0 8px rgba(22, 163, 74, 0.55); }
+        @keyframes navDestello {
+            0%, 100% { opacity: 0.15; transform: scale(0.75) rotate(0deg); }
+            50%      { opacity: 0.92; transform: scale(1.22) rotate(22deg); }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="form-panel">
-        <div class="logo-title">
-            <!-- Ruta de la imagen apuntando a la carpeta img local -->
-            <img src="img/logo.png" alt="Logo Empresa">
-            <h2>Registro de Nuevo Cliente</h2>
-        </div>
+<div class="nav-guirnalda" aria-hidden="true"><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-oro" style="animation-delay:0.00s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-rojo" style="animation-delay:0.25s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-verde" style="animation-delay:0.50s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-azul" style="animation-delay:0.75s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-blanco" style="animation-delay:1.00s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-oro" style="animation-delay:1.25s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-rojo" style="animation-delay:1.50s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-verde" style="animation-delay:1.75s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-azul" style="animation-delay:2.00s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-blanco" style="animation-delay:2.25s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-oro" style="animation-delay:2.50s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-rojo" style="animation-delay:2.75s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-verde" style="animation-delay:3.00s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-azul" style="animation-delay:3.25s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-blanco" style="animation-delay:3.50s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-oro" style="animation-delay:3.75s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-rojo" style="animation-delay:4.00s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-verde" style="animation-delay:4.25s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-azul" style="animation-delay:4.50s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-blanco" style="animation-delay:4.75s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-oro" style="animation-delay:5.00s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-rojo" style="animation-delay:5.25s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-verde" style="animation-delay:5.50s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-azul" style="animation-delay:5.75s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-blanco" style="animation-delay:6.00s"></span></span><span class="nav-foco-wrap"><span class="nav-casquillo"></span><span class="nav-bulbo f-oro" style="animation-delay:6.25s"></span></span></div>
+<div class="nav-brillos-capa" aria-hidden="true"><span class="nav-brillo b-oro" style="left:3%;top:12%;font-size:16px;animation-delay:0.0s;">✦</span><span class="nav-brillo b-hielo" style="left:5%;top:34%;font-size:12px;animation-delay:1.1s;">✦</span><span class="nav-brillo b-oro" style="left:2.5%;top:58%;font-size:15px;animation-delay:2.2s;">✦</span><span class="nav-brillo b-rojo" style="left:4.5%;top:82%;font-size:13px;animation-delay:0.7s;">✦</span><span class="nav-brillo b-oro" style="left:95%;top:15%;font-size:16px;animation-delay:0.5s;">✦</span><span class="nav-brillo b-hielo" style="left:96.5%;top:38%;font-size:12px;animation-delay:1.8s;">✦</span><span class="nav-brillo b-oro" style="left:94.5%;top:64%;font-size:15px;animation-delay:2.6s;">✦</span><span class="nav-brillo b-verde" style="left:96%;top:86%;font-size:13px;animation-delay:1.3s;">✦</span><span class="nav-brillo b-oro" style="left:12%;top:4.5%;font-size:11px;animation-delay:0.9s;">✦</span><span class="nav-brillo b-oro" style="left:88%;top:4.5%;font-size:11px;animation-delay:2.0s;">✦</span></div>
 
-        <div id="lblEstadoConexion" class="estado-conexion">Sistema listo para recepcionar</div>
-
-        <div class="tipo-turno-selector">
-            <input type="radio" id="turnoA" name="tipoTurno" value="A" class="radio-btn" checked onchange="cambiarModoFormulario(true)">
-            <label for="turnoA" class="radio-label">Registro Familiar Cliente A</label>
-
-            <input type="radio" id="turnoB" name="tipoTurno" value="B" class="radio-btn" onchange="cambiarModoFormulario(true)">
-            <label for="turnoB" class="radio-label">Bienes Municipales B</label>
-        </div>
-
-        <div class="turno-estimado modo-a" id="cajaEstimado" title="Doble clic para reiniciar contador si vaciaste la base de datos">
-            <span>SIGUIENTE TURNO ESTIMADO:</span>
-            <strong id="lblTurnoSiguiente">A1</strong>
-        </div>
-
-        <form id="formRecepcion" onsubmit="guardarTurno(event)">
-            <div class="form-grid">
-                <div class="form-group" id="grupoNombres">
-                    <label id="lblNombres">Nombres:</label>
-                    <input type="text" id="nombres" required autocomplete="off">
-                </div>
-
-                <div class="form-group campo-solo-a">
-                    <label>Apellidos:</label>
-                    <input type="text" id="apellidos" autocomplete="off">
-                </div>
-
-                <div class="form-group campo-solo-a">
-                    <label>Género:</label>
-                    <select id="genero">
-                        <option value="Masculino">Masculino</option>
-                        <option value="Femenino">Femenino</option>
-                    </select>
-                </div>
-
-                <div class="form-group campo-solo-a">
-                    <label>Fecha de Nacimiento:</label>
-                    <input type="date" id="fechaNac">
-                </div>
-
-                <div class="form-group campo-solo-a">
-                    <label>Nombre del Padre:</label>
-                    <input type="text" id="padre" autocomplete="off">
-                </div>
-
-                <div class="form-group campo-solo-a">
-                    <label>Nombre de la Madre:</label>
-                    <input type="text" id="madre" autocomplete="off">
-                </div>
-
-                <div class="form-group full-width campo-solo-a">
-                    <label>Lugar de Nacimiento:</label>
-                    <input type="text" id="lugarNac" autocomplete="off">
-                </div>
-
-                <div class="form-group full-width">
-                    <label id="lblComentarios">Comentarios:</label>
-                    <textarea id="comentarios" rows="3"></textarea>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-guardar" id="btnGuardar">Guardar e Imprimir Turno</button>
-        </form>
-    </div>
-
-    <div class="history-panel">
-        <h3>HISTORIAL DE INGRESOS HOY</h3>
-        <div class="history-list" id="listaHistorial"></div>
+<div id="loginOverlay">
+    <div class="login-card">
+        <h2>Identificación de Agente</h2>
+        <p>Ingrese su nombre para iniciar la atención y asigne la ventanilla fija.</p>
+        <input type="text" id="inputUsuario" placeholder="Ej: Lic. Carlos Pérez" autofocus>
+        <select id="selectVentanillaLogin">
+            <option value="1">Ventanilla 1</option>
+            <option value="2">Ventanilla 2</option>
+            <option value="3" selected>Ventanilla 3</option>
+            <option value="4">Ventanilla 4</option>
+        </select>
+        <button onclick="guardarUsuario()">Ingresar al Panel</button>
     </div>
 </div>
 
-<div id="modalDetalle">
+<div id="modalDetalles">
     <div class="modal-card">
-        <h4 id="mTitulo">Detalles del Turno</h4>
-        <div id="mContenido"></div>
-        <button class="btn-cerrar" onclick="document.getElementById('modalDetalle').style.display='none'">Cerrar</button>
+        <h3>Detalles del Turno</h3>
+        <div class="modal-body" id="contenidoModal"></div>
+        <button class="modal-close" onclick="cerrarModal()">Cerrar</button>
     </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <img src="img/logo.png" alt="Logo">
+        <h2>Panel de Atención - Oficinas</h2>
+        <div class="ventanilla-box" id="lblVentanillaFija">Ventanilla Asignada: --</div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="btnPendientes" onclick="cambiarVista('pendientes')">Cola Activa (Hoy)</button>
+        <button class="tab-btn" id="btnAyer" onclick="cambiarVista('ayer')">Registros Resueltos</button>
+        
+        <select id="filtroFechaResueltos" onchange="renderizarTabla()" style="display:none;padding:9px 12px;border:1px solid #cbd5e1;border-radius:6px;background:white;"><option value="hoy">Hoy</option><option value="ayer">Ayer</option><option value="7dias">Últimos 7 días</option><option value="todos">Todos</option></select>
+<div class="user-tag">Agente: <b id="nombreAgenteSpan">---</b> <button onclick="cambiarUsuario()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-weight:bold;">[Cambiar]</button></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 15%;">Fecha / Hora</th>
+                <th style="width: 25%;">Cliente</th>
+                <th style="width: 35%;">Detalles</th>
+                <th style="width: 15%; text-align: center;" id="thAccion">Acción</th>
+            </tr>
+        </thead>
+        <tbody id="tablaCola"></tbody>
+    </table>
 </div>
 
 <script>
-const URL_SCRIPT_A = "https://script.google.com/macros/s/AKfycbznHSwy_Rujdv5En5GZRqr4TrwS_i86jVmLjsr5fsk2y6CGFsHDal1l_Z37g5PI3-XU/exec";
-const URL_SCRIPT_B = "https://script.google.com/macros/s/AKfycbw7eaRPwFM-du9JAATEGmLIg4nCXBAmMBYJZoVBEcIQEDJj_mN6YbQq7lUhZywfcvh6/exec";
-
-const CACHE_KEY_REC = "cache_recepcion_turnos_ab_v9_diario";
-const ZONA_HORARIA_RECEPCION = "America/El_Salvador";
-const INTERVALO_SINCRONIZACION_MS = 45000;
-
-let consultaEnCurso = { A: false, B: false };
-let ultimaConsultaTS = { A: 0, B: 0 };
-let ultimoEstado = { A: "Consultando...", B: "Consultando..." };
-let siguienteA = "A1";
-let siguienteB = "B1";
-let historialA = [];
-let historialB = [];
-let ignoradosHoy = []; // Guarda firmas de registros borrados manualmente en Excel pero pegados en caché de Google
-
-function obtenerTipoActivo() {
-    const el = document.querySelector('input[name="tipoTurno"]:checked');
-    return el ? el.value : 'A';
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbznHSwy_Rujdv5En5GZRqr4TrwS_i86jVmLjsr5fsk2y6CGFsHDal1l_Z37g5PI3-XU/exec";
+const CACHE_KEY = 'colas_oficina_datos_v2';
+const CACHE_ACCIONES = 'colas_oficina_acciones_pendientes_v3'; 
+let vistaActual = 'pendientes'; 
+let datosCache = [];
+let usuarioActual = ''; 
+let ventanillaFija = '3'; 
+let peticionEnCurso = false;
+let accionEnCurso = false;
+let accionesPendientes = [];
+let conteoRellamadas = {};
+try { conteoRellamadas = JSON.parse(localStorage.getItem('conteo_rellamadas_v1') || '{}'); } catch(e) { conteoRellamadas={}; }
+const canalTurnos = null; // Multi-PC: comunicación real se confirma por Apps Script.
+try { accionesPendientes = JSON.parse(localStorage.getItem(CACHE_ACCIONES) || '[]'); } catch(e) { accionesPendientes=[]; }
+let flushAccionesActivo=false;
+function guardarAcciones(){ try{localStorage.setItem(CACHE_ACCIONES,JSON.stringify(accionesPendientes));}catch(e){} }
+function tokenAccion(){return 'of-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);}
+function encolarAccion(a){accionesPendientes.push(a);guardarAcciones();setTimeout(enviarAccionesPendientes,0);}
+async function enviarAccionesPendientes(){
+ if(flushAccionesActivo||!accionesPendientes.length||!navigator.onLine)return; flushAccionesActivo=true;
+ try{
+  const a=accionesPendientes[0]; let url=URL_WEB_APP+'?accion='+encodeURIComponent(a.accion)+'&uid='+encodeURIComponent(a.uid)+'&requestId='+encodeURIComponent(a.token)+'&t='+Date.now();
+  if(a.ventanilla) url+='&ventanilla='+encodeURIComponent(a.ventanilla); if(a.usuario) url+='&usuario='+encodeURIComponent(a.usuario);
+  const ctrl=new AbortController(); const tm=setTimeout(()=>ctrl.abort(),10000); let r; try{r=await fetch(url,{cache:'no-store',signal:ctrl.signal});}finally{clearTimeout(tm);} if(!r.ok)throw new Error('HTTP '+r.status); const j=await r.json(); if(!j||j.status!=='ok')throw new Error((j&&j.message)||'No confirmado');
+  accionesPendientes.shift();guardarAcciones(); if(accionesPendientes.length)setTimeout(enviarAccionesPendientes,0);
+ }catch(e){setTimeout(enviarAccionesPendientes,1500)} finally{flushAccionesActivo=false;}
 }
 
-function peticionGoogleScript(urlCompleta, tipo = 'A') {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 12000);
-    return fetch(urlCompleta, {cache: 'no-store', signal: ctrl.signal})
-        .then(async r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .catch(async err => {
-            if (tipo !== 'B') throw err;
-            return new Promise((resolve, reject) => {
-                const cbName = 'cb_rec_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
-                const script = document.createElement('script');
-                let finished = false;
-                const finish = (error, result) => {
-                    if (finished) return;
-                    finished = true;
-                    clearTimeout(t);
-                    delete window[cbName];
-                    script.remove();
-                    error ? reject(error) : resolve(result);
-                };
-                const t = setTimeout(() => finish(new Error('JSONP agotó tiempo')), 8000);
-                window[cbName] = data => finish(null, data);
-                script.onerror = () => finish(new Error('Error de JSONP'));
-                script.src = urlCompleta + (urlCompleta.includes('?') ? '&' : '?') + 'callback=' + cbName;
-                document.body.appendChild(script);
-            });
-        }).finally(() => clearTimeout(timer));
-}
-
-function normalizarClave(str) {
-    return String(str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function leerCampo(obj, posiblesNombres, def = "") {
-    if (!obj || typeof obj !== "object") return def;
-    const mapa = {};
-    for (const k of Object.keys(obj)) mapa[normalizarClave(k)] = obj[k];
-    for (const nombre of posiblesNombres) {
-        const val = mapa[normalizarClave(nombre)];
-        if (val !== undefined && val !== null && String(val).trim() !== "") return String(val).trim();
-    }
-    return def;
-}
-
-function fechaLocalISO(fecha = new Date()) {
-    return new Intl.DateTimeFormat('en-CA', {
-        timeZone: ZONA_HORARIA_RECEPCION, year: 'numeric', month: '2-digit', day: '2-digit'
-    }).format(fecha);
-}
-
-function fechaRegistroISO(x) {
-    const valor = leerCampo(x, ["FechaHora", "FechaRegistro", "Fecha", "Timestamp"]);
-    if (!valor) return "";
-    const isoConHora = /^\d{4}-\d{2}-\d{2}T/.test(valor);
-    if (isoConHora) {
-        const fecha = new Date(valor);
-        return Number.isNaN(fecha.getTime()) ? "" : fechaLocalISO(fecha);
-    }
-    const iso = valor.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-    const local = valor.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
-    if (local) return `${local[3]}-${local[2].padStart(2,'0')}-${local[1].padStart(2,'0')}`;
-    return "";
-}
-
-function obtenerNombreParaTarjeta(x) {
-    const nombres = leerCampo(x, ["Nombres", "Nombre", "Cliente", "NombreCompleto"]);
-    const apellidos = leerCampo(x, ["Apellidos", "Apellido"]);
-    const completo = `${nombres} ${apellidos}`.trim();
-    return completo !== "" ? completo : "SIN NOMBRE";
-}
-
-function firmaRegistro(x) {
-    const id = leerCampo(x, ["ID", "Turno", "Numero"]).toUpperCase();
-    const nombre = obtenerNombreParaTarjeta(x).toUpperCase().trim();
-    return `${id}|${nombre}`;
-}
-
-function esRegistroValido(x) {
-    const nombre = obtenerNombreParaTarjeta(x).toUpperCase().trim();
-    // Filtra registros vacíos, "CLIENTE:" y el registro pegado "PRUEBA"
-    if (nombre === "SIN NOMBRE" || nombre === "CLIENTE:" || nombre === "CLIENTE" || nombre === "PRUEBA") {
-        return false;
-    }
-    if (ignoradosHoy.includes(firmaRegistro(x))) {
-        return false;
-    }
-    return true;
-}
-
-function aislarTurnosRecientesDelDia(lista, prefijo) {
-    if (!Array.isArray(lista)) return [];
-    const hoy = fechaLocalISO();
-    const vistos = new Set();
-    const resultado = [];
-
-    lista.forEach(x => {
-        const id = leerCampo(x, ["ID", "Turno", "Numero"]).toUpperCase();
-        if (
-            new RegExp(`^${prefijo}[0-9]+$`).test(id) &&
-            fechaRegistroISO(x) === hoy &&
-            esRegistroValido(x) &&
-            !vistos.has(id)
-        ) {
-            vistos.add(id);
-            resultado.push(x);
-        }
-    });
-    return resultado;
-}
-
-function guardarRespaldoLocal() {
+function leerCache(){
     try {
-        localStorage.setItem(CACHE_KEY_REC, JSON.stringify({
-            dia: fechaLocalISO(), historialA, historialB, siguienteA, siguienteB, ignoradosHoy
-        }));
-    } catch (e) {}
+        datosCache = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+        if(!Array.isArray(datosCache)) datosCache = [];
+    } catch(e) { datosCache = []; }
 }
 
-function limpiarCambioDeDia() {
-    const hoy = fechaLocalISO();
-    if (window.__diaRecepcion === hoy) return;
-    window.__diaRecepcion = hoy;
-    historialA = [];
-    historialB = [];
-    ignoradosHoy = [];
-    siguienteA = "A1";
-    siguienteB = "B1";
-    try { localStorage.removeItem(CACHE_KEY_REC); } catch (e) {}
-    guardarRespaldoLocal();
-    cambiarModoFormulario(false);
+function guardarCache(){
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(datosCache)); } catch(e) {}
 }
 
-function calcularSiguienteTurno(listaHoy, prefijo) {
-    if (!Array.isArray(listaHoy) || !listaHoy.length) return prefijo + "1";
-    let max = 0;
-    listaHoy.forEach(x => {
-        const id = leerCampo(x, ["ID", "Turno", "Numero"]).toUpperCase();
-        if (id.startsWith(prefijo)) {
-            const num = parseInt(id.replace(/\D/g, ""), 10);
-            if (!isNaN(num) && num > max) max = num;
-        }
-    });
-    return prefijo + (max + 1);
-}
-
-function cambiarModoFormulario(verificarServidor = false) {
-    const tipo = obtenerTipoActivo();
-    const camposA = document.querySelectorAll('.campo-solo-a');
-    const grupoNombres = document.getElementById('grupoNombres');
-    const lblNombres = document.getElementById('lblNombres');
-    const lblComentarios = document.getElementById('lblComentarios');
-    const inputComentarios = document.getElementById('comentarios');
-    const cajaEstimado = document.getElementById('cajaEstimado');
-    const lblTurno = document.getElementById('lblTurnoSiguiente');
-    const btnGuardar = document.getElementById('btnGuardar');
-
-    if (tipo === 'A') {
-        camposA.forEach(el => el.classList.remove('oculto'));
-        grupoNombres.classList.remove('full-width');
-        lblNombres.textContent = "Nombres:";
-        lblComentarios.textContent = "Comentarios:";
-        inputComentarios.required = false;
-        cajaEstimado.classList.add('modo-a');
-        lblTurno.textContent = siguienteA;
-        btnGuardar.classList.remove('btn-b');
-    } else {
-        camposA.forEach(el => el.classList.add('oculto'));
-        grupoNombres.classList.add('full-width');
-        lblNombres.textContent = "Nombre Completo del Cliente:";
-        lblComentarios.textContent = "Trámite a Realizar (Bienes Municipales):";
-        inputComentarios.required = true;
-        cajaEstimado.classList.remove('modo-a');
-        lblTurno.textContent = siguienteB;
-        btnGuardar.classList.add('btn-b');
-    }
-    pintarHistorial();
-    actualizarIndicadorConexion();
-
-    if (verificarServidor && (Date.now() - ultimaConsultaTS[tipo] > 20000)) {
-        consultarServicio(tipo, tipo === 'A' ? URL_SCRIPT_A : URL_SCRIPT_B);
-    }
-}
-
-function restaurarRespaldoLocal() {
-    const hoy = fechaLocalISO();
-    window.__diaRecepcion = hoy;
-    try {
-        localStorage.removeItem("cache_recepcion_turnos_ab_v7_diario");
-        localStorage.removeItem("cache_recepcion_turnos_ab_v8_diario");
-        const guardado = JSON.parse(localStorage.getItem(CACHE_KEY_REC) || "null");
-        if (!guardado || guardado.dia !== hoy) return;
-        ignoradosHoy = Array.isArray(guardado.ignoradosHoy) ? guardado.ignoradosHoy : [];
-        historialA = aislarTurnosRecientesDelDia(guardado.historialA || [], "A");
-        historialB = aislarTurnosRecientesDelDia(guardado.historialB || [], "B");
-        siguienteA = calcularSiguienteTurno(historialA, "A");
-        siguienteB = calcularSiguienteTurno(historialB, "B");
-    } catch (e) {}
-}
-
-function actualizarIndicadorConexion() {
-    const tipo = obtenerTipoActivo();
-    document.getElementById('lblEstadoConexion').textContent = `Servicio ${tipo}: ${ultimoEstado[tipo]}`;
-}
-
-async function consultarServicio(tipo, url) {
-    limpiarCambioDeDia();
-    if (consultaEnCurso[tipo]) return;
-    consultaEnCurso[tipo] = true;
-
-    try {
-        const res = await peticionGoogleScript(`${url}?accion=estado&t=${Date.now()}`, tipo);
-        if (!res || res.status === 'error' || res.ok === false) throw new Error('Sin respuesta válida');
-        const datos = Array.isArray(res) ? res : (Array.isArray(res.datos) ? res.datos : []);
-        const filtrados = aislarTurnosRecientesDelDia(datos, tipo);
-
-        if (tipo === 'A') {
-            historialA = filtrados;
-            siguienteA = calcularSiguienteTurno(filtrados, 'A');
-        } else {
-            historialB = filtrados;
-            siguienteB = calcularSiguienteTurno(filtrados, 'B');
-        }
-        ultimaConsultaTS[tipo] = Date.now();
-        ultimoEstado[tipo] = 'Conectado · datos de hoy';
-        guardarRespaldoLocal();
-    } catch (err) {
-        ultimoEstado[tipo] = 'Error de lectura (' + String(err.message || err).slice(0,75) + ') · respaldo local';
-    } finally {
-        consultaEnCurso[tipo] = false;
-        cambiarModoFormulario(false);
-    }
-}
-
-async function consultarEstado(ambos = false) {
-    limpiarCambioDeDia();
-    if (document.hidden && !ambos) return;
-
-    if (ambos) {
-        await Promise.all([
-            consultarServicio('A', URL_SCRIPT_A),
-            consultarServicio('B', URL_SCRIPT_B)
-        ]);
-    } else {
-        const tipoActivo = obtenerTipoActivo();
-        const urlActiva = (tipoActivo === 'A') ? URL_SCRIPT_A : URL_SCRIPT_B;
-        await consultarServicio(tipoActivo, urlActiva);
-    }
-}
-
-async function guardarTurno(event) {
-    event.preventDefault();
-    limpiarCambioDeDia();
-    const tipo = obtenerTipoActivo();
-    const urlDestino = (tipo === 'A') ? URL_SCRIPT_A : URL_SCRIPT_B;
-
-    if (!urlDestino.includes("script.google.com")) {
-        alert(`Configura la URL .exec del servicio ${tipo}.`);
-        return;
-    }
-
-    const nombres = document.getElementById('nombres').value.trim();
-    const apellidos = document.getElementById('apellidos').value.trim();
-    const genero = document.getElementById('genero').value;
-    const fechaNac = document.getElementById('fechaNac').value;
-    const padre = document.getElementById('padre').value.trim() || "N/D";
-    const madre = document.getElementById('madre').value.trim() || "N/D";
-    const lugarNac = document.getElementById('lugarNac').value.trim() || "N/D";
-    const comentarios = document.getElementById('comentarios').value.trim() || "N/D";
-    const nombreCompleto = (tipo === 'A') ? `${nombres} ${apellidos}`.trim() : nombres;
-    
-    const turnoAsignado = (tipo === 'A') ? siguienteA : siguienteB;
-
-    const nuevoItemLocal = {
-        ID: turnoAsignado,
-        Nombres: nombres,
-        Apellidos: apellidos,
-        Nombre: nombreCompleto,
-        Genero: genero,
-        FechaNacimiento: fechaNac,
-        Padre: padre,
-        Madre: madre,
-        LugarNacimiento: lugarNac,
-        Tramite: comentarios,
-        Comentarios: comentarios,
-        Estado: "Pendiente",
-        FechaHora: new Date().toISOString(),
-        FechaRegistro: fechaLocalISO()
-    };
-
-    // Si este nuevo turno tenía una firma ignorada previa, la libera
-    const nuevaFirma = firmaRegistro(nuevoItemLocal);
-    ignoradosHoy = ignoradosHoy.filter(f => f !== nuevaFirma);
-
-    if (tipo === 'A') {
-        historialA.push(nuevoItemLocal);
-        siguienteA = calcularSiguienteTurno(historialA, 'A');
-    } else {
-        historialB.push(nuevoItemLocal);
-        siguienteB = calcularSiguienteTurno(historialB, 'B');
-    }
-
-    document.getElementById('formRecepcion').reset();
-    document.getElementById('nombres').focus();
-    guardarRespaldoLocal();
-    cambiarModoFormulario(false);
-
-    const params = new URLSearchParams({
-        accion: "registrar",
-        ID: turnoAsignado,
-        nombre: nombreCompleto,
-        Nombres: nombres,
-        Apellidos: apellidos,
-        Genero: genero,
-        FechaNacimiento: fechaNac,
-        Padre: padre,
-        Madre: madre,
-        LugarNacimiento: lugarNac,
-        tramite: comentarios,
-        Comentarios: comentarios,
-        t: Date.now()
-    });
-
-    peticionGoogleScript(`${urlDestino}?${params.toString()}`, tipo).then(() => {
-        consultarServicio(tipo, urlDestino);
-    });
-}
-
-function escaparTexto(valor) {
-    return String(valor ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function fechaLegible(valor, incluirHora = true) {
-    const texto = String(valor || "").trim();
-    if (!texto) return "—";
-    if (/^\d{4}-\d{2}-\d{2}T/.test(texto)) {
-        const d = new Date(texto);
-        if (!Number.isNaN(d.getTime())) return new Intl.DateTimeFormat('es-ES', {
-            timeZone: ZONA_HORARIA_RECEPCION, day:'2-digit',month:'2-digit',year:'numeric',
-            ...(incluirHora ? {hour:'2-digit',minute:'2-digit',hour12:false} : {})
-        }).format(d);
-    }
-    const fechaISO = texto.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|\s)/);
-    if (fechaISO) return `${fechaISO[3]}/${fechaISO[2]}/${fechaISO[1]}`;
-    const fechaLocal = texto.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})(.*)$/);
-    if (fechaLocal) return `${fechaLocal[1].padStart(2,'0')}/${fechaLocal[2].padStart(2,'0')}/${fechaLocal[3]}${incluirHora ? fechaLocal[4] : ''}`;
-    return texto;
-}
-
-function filaDetalle(etiqueta, valor) {
-    const texto = String(valor ?? "").trim();
-    if (!texto || texto === 'N/D' || texto === '--') return '';
-    return `<div class="modal-row"><strong>${escaparTexto(etiqueta)}:</strong> ${escaparTexto(texto)}</div>`;
-}
-
-function detallesTurno(x, esB, id) {
-    const fecha = leerCampo(x, ['FechaHora','FechaRegistro','Fecha','Timestamp']);
-    const filas = [filaDetalle('Turno', id), filaDetalle(esB ? 'Fecha' : 'Fecha/Hora', fechaLegible(fecha, !esB))];
-    if (esB) {
-        filas.push(filaDetalle('Nombre completo', leerCampo(x, ['Nombre','NombreCompleto','Nombres','Cliente'])));
-        filas.push(filaDetalle('Trámite a realizar', leerCampo(x, ['Tramite','Trámite','Comentarios'])));
-    } else {
-        filas.push(filaDetalle('Nombres', leerCampo(x, ['Nombres','Nombre'])));
-        filas.push(filaDetalle('Apellidos', leerCampo(x, ['Apellidos','Apellido'])));
-        filas.push(filaDetalle('Género', leerCampo(x, ['Genero','Género'])));
-        filas.push(filaDetalle('Fecha de nacimiento', fechaLegible(leerCampo(x, ['FechaNacimiento']), false)));
-        filas.push(filaDetalle('Padre', leerCampo(x, ['Padre'])));
-        filas.push(filaDetalle('Madre', leerCampo(x, ['Madre'])));
-        filas.push(filaDetalle('Lugar de nacimiento', leerCampo(x, ['LugarNacimiento'])));
-        filas.push(filaDetalle('Comentarios', leerCampo(x, ['Comentarios','Tramite'])));
-    }
-    return filas.join('');
-}
-
-function pintarHistorial() {
-    const cont = document.getElementById('listaHistorial');
-    const tipoActivo = obtenerTipoActivo();
-    const listaBase = (tipoActivo === 'A') ? historialA : historialB;
-    const lista = [...listaBase].reverse();
-
-    if (!lista.length) {
-        cont.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:13px;">Sin ingresos registrados hoy</p>`;
-        return;
-    }
-
-    cont.innerHTML = "";
-    lista.forEach(x => {
-        const id = leerCampo(x, ["ID", "Turno", "Numero"], "--");
-        const esB = id.toUpperCase().startsWith("B");
-        const nombreCompleto = obtenerNombreParaTarjeta(x);
-        const fechaMini = fechaRegistroISO(x) || "";
-
-        const div = document.createElement("div");
-        div.className = `history-item ${esB ? 'item-b' : ''}`;
-        div.innerHTML = `
-            <div>
-                <div class="h-turno">${id}</div>
-                <div class="h-nombre">${nombreCompleto}</div>
-            </div>
-            <div class="right-col">
-                <button type="button" class="btn-ver">Ver</button>
-                <span class="h-fecha">${fechaMini}</span>
-            </div>
-        `;
-        div.querySelector(".btn-ver").onclick = () => {
-            document.getElementById("mTitulo").textContent = `Detalles del Turno: ${id}`;
-            document.getElementById("mContenido").innerHTML = detallesTurno(x, esB, id);
-            document.getElementById("modalDetalle").style.display = "flex";
-        };
-        cont.appendChild(div);
-    });
-}
-
-window.onload = () => {
-    restaurarRespaldoLocal();
-    cambiarModoFormulario(false);
-    consultarEstado(true);
-
-    // Doble clic en "SIGUIENTE TURNO ESTIMADO" descarta cualquier dato pegado en la caché de Google Script y reinicia a A1/B1
-    document.getElementById('cajaEstimado').addEventListener('dblclick', () => {
-        const tipo = obtenerTipoActivo();
-        const listaActual = (tipo === 'A') ? historialA : historialB;
-        listaActual.forEach(x => {
-            const f = firmaRegistro(x);
-            if (!ignoradosHoy.includes(f)) ignoradosHoy.push(f);
-        });
-        if (tipo === 'A') { historialA = []; siguienteA = "A1"; }
-        else { historialB = []; siguienteB = "B1"; }
-        guardarRespaldoLocal();
-        cambiarModoFormulario(false);
-    });
-
-    document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) {
-            const tipo = obtenerTipoActivo();
-            if (Date.now() - ultimaConsultaTS[tipo] > 30000) {
-                consultarEstado(false);
-            }
-        }
-    });
-
-    setInterval(() => consultarEstado(false), INTERVALO_SINCRONIZACION_MS);
-    setInterval(() => limpiarCambioDeDia(), 30000);
+window.onload = function(){ 
+    leerCache(); 
+    renderizarTabla(); 
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('inputUsuario').focus();
 };
+
+function guardarUsuario(){
+    let input = document.getElementById('inputUsuario').value.trim();
+    if(!input){
+        alert('Por favor ingrese un nombre de agente válido.');
+        return;
+    }
+    usuarioActual = input;
+    ventanillaFija = document.getElementById('selectVentanillaLogin').value;
+    
+    document.getElementById('nombreAgenteSpan').innerText = usuarioActual;
+    document.getElementById('lblVentanillaFija').innerText = 'Ventanilla Asignada: ' + ventanillaFija;
+    document.getElementById('loginOverlay').style.display = 'none';
+    cargarDatos();
+    enviarAccionesPendientes();
+    setInterval(cargarDatos, 1500);
+}
+
+function cambiarUsuario(){
+    usuarioActual = '';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('inputUsuario').value = '';
+    document.getElementById('inputUsuario').focus();
+}
+
+async function cargarDatos(){
+    if(!usuarioActual || peticionEnCurso || accionEnCurso || !navigator.onLine) return;
+    peticionEnCurso = true;
+    try {
+        const ctrlEstado=new AbortController(); const tmEstado=setTimeout(()=>ctrlEstado.abort(),4500); let res; try { res=await fetch(URL_WEB_APP + '?accion=estado&t=' + Date.now(), {cache:'no-store',signal:ctrlEstado.signal}); } finally { clearTimeout(tmEstado); }
+        if(!res.ok) throw new Error();
+        let j = await res.json();
+        const servidor = Array.isArray(j) ? j : (j.datos || []);
+        // No permitir que una lectura atrasada revierta una acción local pendiente.
+        const pendientesPorUid = new Map(accionesPendientes.map(a=>[String(a.uid),a]));
+        datosCache = servidor.map(r=>{
+            const a=pendientesPorUid.get(String(r.UID||''));
+            if(!a) return r;
+            const x={...r};
+            if(a.accion==='llamar'||a.accion==='rellamar'){x.Estado='Llamado';x.Ventanilla=a.ventanilla||x.Ventanilla;x.UltimoLlamado=a.creado||Date.now();x.AtendidoPor=a.usuario||x.AtendidoPor;}
+            if(a.accion==='resuelto'){x.Estado='Resuelto';x.AtendidoPor=a.usuario||x.AtendidoPor;}
+            return x;
+        });
+        guardarCache();
+        renderizarTabla();
+    } catch(e) {} finally { peticionEnCurso = false; }
+}
+
+function cambiarVista(vista){
+    vistaActual = vista;
+    document.getElementById('btnPendientes').className = vista === 'pendientes' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('btnAyer').className = vista === 'ayer' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('thAccion').style.display = vista === 'pendientes' ? 'table-cell' : 'none'; const ff=document.getElementById('filtroFechaResueltos'); if(ff) ff.style.display=vista==='ayer'?'inline-block':'none';
+    renderizarTabla();
+}
+
+function renderizarTabla(){
+    let tbody = document.getElementById('tablaCola');
+    tbody.innerHTML = '';
+    let filtrados = datosCache.filter(row => {
+        let res = String(row.Estado).trim().toLowerCase() === 'resuelto';
+        return vistaActual === 'pendientes' ? !res && (row.Estado === 'Pendiente' || row.Estado === 'Llamado') : res;
+    });
+    if(vistaActual==='ayer'){
+      const tipo=(document.getElementById('filtroFechaResueltos')||{}).value||'hoy';
+      const ahora=new Date(), inicio=new Date(ahora.getFullYear(),ahora.getMonth(),ahora.getDate());
+      filtrados=filtrados.filter(r=>{const f=new Date(r.FechaHora);if(isNaN(f))return false;if(tipo==='todos')return true;if(tipo==='hoy')return f>=inicio;if(tipo==='ayer'){const a=new Date(inicio);a.setDate(a.getDate()-1);return f>=a&&f<inicio;}if(tipo==='7dias'){const d=new Date(inicio);d.setDate(d.getDate()-6);return f>=d;}return true;});
+      filtrados.sort((a,b)=>new Date(b.FechaHora||0)-new Date(a.FechaHora||0));
+    }
+    
+    if(!filtrados.length){
+        let mensaje = vistaActual === 'pendientes' ? 'No hay clientes activos en la cola.' : 'No hay registros resueltos.';
+        tbody.innerHTML = `<tr><td colspan="${vistaActual === 'pendientes' ? 5 : 4}" style="text-align:center; color:#64748b; padding: 30px;">${mensaje}</td></tr>`;
+        return;
+    }
+    
+    filtrados.forEach(row => {
+        let tr = document.createElement('tr'), accion = '';
+        let btnVer = `<button class="view-btn" onclick="verDetalles('${row.UID}')">👁️ Ver</button>`;
+
+        if(vistaActual === 'pendientes'){
+            let llamar = row.Estado === 'Llamado'
+                ? `<button class="called-btn" id="btnLlamar_${row.UID}" onclick="llamarCliente('${row.UID}')">🔄 Re-llamar${conteoRellamadas[row.UID] ? ' ('+conteoRellamadas[row.UID]+')' : ''}</button>`
+                : `<button class="action-btn" id="btnLlamar_${row.UID}" onclick="llamarCliente('${row.UID}')">📢 Llamar</button>`;
+            accion = `<td style="text-align: center;"><div class="btn-accion-group">${btnVer}${llamar}<button class="resolved-btn" id="btnResuelto_${row.UID}" onclick="marcarResuelto('${row.UID}')">✔️ Resuelto</button></div></td>`;
+        } else {
+            accion = `<td style="text-align: center;">${btnVer}</td>`;
+        }
+
+        tr.innerHTML = `<td><b style="color: #0284c7; font-size: 15px;">${row.ID}</b></td><td style="color: #475569; font-size: 13px;">${row.FechaHora ? new Date(row.FechaHora).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : ''}</td><td><div class="cliente-info">${row.Nombres} ${row.Apellidos}</div><div class="cliente-sub">Género: ${row.Genero}</div></td><td><div class="detalles-resumen"><span>Padre: ${row.Padre || 'N/D'} | Comentarios: ${row.Comentarios || 'Ninguno'}</span></div></td>${accion}`;
+        tbody.appendChild(tr);
+    });
+}
+
+function verDetalles(uid){
+    let row = datosCache.find(x => String(x.UID) === String(uid));
+    if(!row) return;
+
+    let fechaNacLimpia = row.FechaNacimiento ? String(row.FechaNacimiento).split('T')[0] : '';
+
+    let html = `
+        <p><b>ID de Turno:</b> ${row.ID}</p>
+        <p><b>Fecha y Hora:</b> ${row.FechaHora ? new Date(row.FechaHora).toLocaleString() : ''}</p>
+        <p><b>Nombres:</b> ${row.Nombres || ''}</p>
+        <p><b>Apellidos:</b> ${row.Apellidos || ''}</p>
+        <p><b>Género:</b> ${row.Genero || ''}</p>
+        <p><b>Fecha de Nacimiento:</b> ${fechaNacLimpia}</p>
+        <p><b>Padre:</b> ${row.Padre || 'N/D'}</p>
+        <p><b>Madre:</b> ${row.Madre || 'N/D'}</p>
+        <p><b>Lugar de Nacimiento:</b> ${row.LugarNacimiento || ''}</p>
+        <p><b>Comentarios:</b> ${row.Comentarios || 'Ninguno'}</p>
+    `;
+    document.getElementById('contenidoModal').innerHTML = html;
+    document.getElementById('modalDetalles').style.display = 'flex';
+}
+
+function cerrarModal(){
+    document.getElementById('modalDetalles').style.display = 'none';
+}
+
+function llamarCliente(uid){
+    const row = datosCache.find(x => String(x.UID || '') === String(uid));
+    if(!row){ alert('No se encontró el registro seleccionado.'); return; }
+
+    const yaLlamado = String(row.Estado || '').trim().toLowerCase() === 'llamado';
+    const accion = yaLlamado ? 'rellamar' : 'llamar';
+    const ahora = Date.now();
+    const atendido = usuarioActual+' (V.'+ventanillaFija+')';
+
+    if(yaLlamado){
+        conteoRellamadas[uid] = Number(conteoRellamadas[uid]||0)+1;
+        try{localStorage.setItem('conteo_rellamadas_v1',JSON.stringify(conteoRellamadas));}catch(e){}
+    }
+
+    // Cambio visual INMEDIATO, antes de esperar Internet/Google.
+    row.Estado='Llamado';
+    row.Ventanilla=ventanillaFija;
+    row.UltimoLlamado=ahora;
+    row.AtendidoPor=atendido;
+    guardarCache();
+    renderizarTabla();
+
+    const btn=document.getElementById('btnLlamar_'+uid);
+    if(btn){
+        const original=btn.innerHTML;
+        btn.innerHTML='🔊 ENVIADO ✓';
+        btn.disabled=true;
+        setTimeout(()=>{btn.disabled=false; renderizarTabla();},650);
+    }
+
+    // Canal instantáneo si Pantalla y Oficinas están abiertos en el mismo equipo/origen.
+    const evento={tipo:'llamada',uid:String(uid),id:row.ID,ventanilla:String(ventanillaFija),ultimoLlamado:ahora};
+    try{ localStorage.setItem('turnos_evento_instantaneo_v1',JSON.stringify(evento)); }catch(e){}
+    try{ if(canalTurnos) canalTurnos.postMessage(evento); }catch(e){}
+
+    // Persistencia normal en Google Apps Script.
+    encolarAccion({
+        token:tokenAccion(),accion,uid:String(uid),
+        ventanilla:String(ventanillaFija),
+        usuario:atendido,creado:ahora
+    });
+}
+
+function marcarResuelto(uid){
+    const row = datosCache.find(x => String(x.UID || '') === String(uid));
+    if(!row){ alert('No se encontró el registro seleccionado.'); return; }
+    // Sin rebote: desaparece de la cola una sola vez y queda persistido localmente.
+    row.Estado='Resuelto'; row.AtendidoPor=usuarioActual+' (V.'+ventanillaFija+')';
+    guardarCache(); renderizarTabla();
+    encolarAccion({token:tokenAccion(),accion:'resuelto',uid:String(uid),usuario:row.AtendidoPor,creado:Date.now()});
+}
+
+window.addEventListener('online', ()=>{enviarAccionesPendientes(); setTimeout(cargarDatos,300);});
+document.addEventListener('visibilitychange', () => {
+    if(!document.hidden){ leerCache(); renderizarTabla(); cargarDatos(); }
+});
+
+let consultaMensajeActiva=false;
+async function consultarMensajesOficina(){
+ if(!usuarioActual||!ventanillaFija||consultaMensajeActiva||!navigator.onLine)return;
+ consultaMensajeActiva=true;const c=new AbortController(),tm=setTimeout(()=>c.abort(),3500);
+ try{
+  const r=await fetch(URL_WEB_APP+'?accion=mensajes&ventanilla='+encodeURIComponent(ventanillaFija)+'&t='+Date.now(),{cache:'no-store',signal:c.signal});
+  if(!r.ok)return;const j=await r.json();
+  if(j&&j.status==='ok'&&Array.isArray(j.mensajes)){
+   for(const m of j.mensajes){
+    if(!m||!m.id)continue; mostrarAvisoJefatura(m.mensaje||'');
+    try{await fetch(URL_WEB_APP+'?accion=ack_mensaje&id='+encodeURIComponent(m.id)+'&t='+Date.now(),{cache:'no-store'});}catch(e){}
+   }
+  }
+ }catch(e){}finally{clearTimeout(tm);consultaMensajeActiva=false;}
+}
+function mostrarAvisoJefatura(txt){
+ let d=document.getElementById('avisoJefatura');
+ if(!d){d=document.createElement('div');d.id='avisoJefatura';d.style.cssText='position:fixed;right:20px;bottom:20px;z-index:10000;background:#0f172a;color:white;padding:20px 24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.3);max-width:460px;font-weight:700;font-size:17px';document.body.appendChild(d);}
+ d.textContent='Jefatura: '+txt;d.style.display='block';clearTimeout(d._tm);d._tm=setTimeout(()=>d.style.display='none',15000);
+}
+setInterval(consultarMensajesOficina,2000);
 </script>
 </body>
 </html>
